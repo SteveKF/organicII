@@ -67,6 +67,7 @@ public class Classifier {
                     condition = true;
                     action = 0;
                 }
+                break;
         }
     }
 
@@ -110,7 +111,7 @@ public class Classifier {
 
 
     /**
-     * TODO: setReward unnötig??
+     * TODO: setReward unnÃ¶tig??
      */
     private void setReward(){
 
