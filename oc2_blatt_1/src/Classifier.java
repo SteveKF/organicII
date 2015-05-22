@@ -1,3 +1,10 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+
 import jnibwapi.Position;
 import jnibwapi.Unit;
 import jnibwapi.types.UnitType;
@@ -24,14 +31,32 @@ public class Classifier {
     private final double BETA = 0.15;
 
 
-    public Classifier() {
-        //Initialize start parameters
+    public Classifier() throws FileNotFoundException, UnsupportedEncodingException {
+        //Initialize start parameters for unlearnt classifier
         fitness = 20;
         precision = 0.00001;
         error = 0.000001;
         condition = false;
         action = -1;
         reward = 1;
+    }
+    
+    public Classifier(boolean useExistingParameters) throws IOException {
+    	String[] parameterArray = new String[5];
+    	int i = 0;
+    	BufferedReader br = new BufferedReader(new FileReader("parameters.txt"));
+    	String line;
+        while ((line = br.readLine()) != null) {
+           parameterArray[i] = line;
+        	i++;
+        }
+        //Initialize with established start parameters
+        fitness = Double.parseDouble(parameterArray[2]);
+        precision = Double.parseDouble(parameterArray[0]);
+        error = Double.parseDouble(parameterArray[1]);
+        condition = Boolean.parseBoolean(parameterArray[4]);
+        //action = Integer.parseInt(parameterArray[4]);
+        reward = Double.parseDouble(parameterArray[3]);
     }
 
     public void setCondition(int index, Unit unit, Unit target) {
@@ -85,7 +110,10 @@ public class Classifier {
 
     }
 
-    public void update(double[] predictionarry) {
+    public void update(double[] predictionarray) throws FileNotFoundException, UnsupportedEncodingException {
+    	
+    	PrintWriter writer = new PrintWriter("parameters.txt", "UTF-8");
+    	
         //update precision
         precision = precision + BETA * (reward-precision);
 
@@ -99,19 +127,27 @@ public class Classifier {
         setReward();
 
         double tmp = Double.NEGATIVE_INFINITY;
-        for(int i=0; i<predictionarry.length;i++){
-            if(tmp != Math.max(tmp,predictionarry[i]))
-                tmp = Math.max(tmp,predictionarry[i]);
+        for(int i=0; i<predictionarray.length;i++){
+            if(tmp != Math.max(tmp,predictionarray[i]))
+                tmp = Math.max(tmp,predictionarray[i]);
         }
         reward = reward + DISCOUNT_FACTOR * tmp;
 
         //prepare condition parameter for next iteration
         condition = false;
+        
+        writer.println(precision); // 0
+        writer.println(error);		// 1
+        writer.println(fitness);	// 2
+        writer.println(reward);		// 3
+        writer.println(condition);	// 4
+        
+        writer.close();
     }
 
 
     /**
-     * TODO: setReward unnÃ¶tig??
+     * TODO: setReward unnötig??
      */
     private void setReward(){
 

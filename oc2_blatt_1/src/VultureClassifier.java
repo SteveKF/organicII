@@ -1,5 +1,9 @@
 import jnibwapi.Position;
 import jnibwapi.Unit;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -11,8 +15,28 @@ public class VultureClassifier {
     public VultureClassifier() {
         //initialize classifier
         classifier = new Classifier[Classifier.NUM_CONDITIONS];
+        /*
+        // new (unlearnt) classifier
         for(int i=0;i<classifier.length;i++) {
-            classifier[i] = new Classifier();
+            try {
+				classifier[i] = new Classifier();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        } 
+        */
+     // classifier that uses the saved parameters
+        for(int i=0;i<classifier.length;i++) {
+				try {
+					classifier[i] = new Classifier(true);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
         }
     }
 
@@ -83,15 +107,18 @@ public class VultureClassifier {
     private ArrayList<Classifier> generateActionSet(double[] predictionarray,ArrayList<Classifier> matchset){
         double tmp = Double.NEGATIVE_INFINITY;
         int index = 0;
+
         for (int i = 0; i < predictionarray.length; i++) {
             if (tmp != Math.max(tmp, predictionarray[i])) {
                 tmp = predictionarray[i];
                 index = i;
+                System.out.print(predictionarray[i] + " | ");
             }
         }
 
         action = index;
-
+        System.out.println("Action: "+ action);
+        
         ArrayList<Classifier> actionset = new ArrayList<>();
 
         for(int i=0;i<matchset.size();i++){
@@ -109,7 +136,13 @@ public class VultureClassifier {
         for(int i=0;i<actionset.size();i++){
             for(int j=0;j<classifier.length;j++){
                 if(actionset.get(i)==classifier[j]){
-                    classifier[j].update(predictionarray);
+                    try {
+						classifier[j].update(predictionarray);
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					} catch (UnsupportedEncodingException e) {
+						e.printStackTrace();
+					}
                 }
             }
         }

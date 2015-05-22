@@ -26,9 +26,6 @@ public class Vulture {
     }
 
     public void step() {
-        /**
-         * TODO: XCS
-         */
 
         Unit target = getClosestEnemy();
 
