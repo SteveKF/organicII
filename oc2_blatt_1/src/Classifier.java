@@ -55,8 +55,9 @@ public class Classifier {
         precision = Double.parseDouble(parameterArray[0]);
         error = Double.parseDouble(parameterArray[1]);
         condition = Boolean.parseBoolean(parameterArray[4]);
-        //action = Integer.parseInt(parameterArray[4]);
         reward = Double.parseDouble(parameterArray[3]);
+        
+        br.close();
     }
 
     public void setCondition(int index, Unit unit, Unit target) {
@@ -141,6 +142,8 @@ public class Classifier {
         writer.println(fitness);	// 2
         writer.println(reward);		// 3
         writer.println(condition);	// 4
+        
+        //System.out.println("Parameters updated in text file");
         
         writer.close();
     }

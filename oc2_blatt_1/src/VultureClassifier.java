@@ -112,12 +112,12 @@ public class VultureClassifier {
             if (tmp != Math.max(tmp, predictionarray[i])) {
                 tmp = predictionarray[i];
                 index = i;
-                System.out.print(predictionarray[i] + " | ");
+                //System.out.print(predictionarray[i] + " | ");
             }
         }
 
         action = index;
-        System.out.println("Action: "+ action);
+        //System.out.println("Action: "+ action);
         
         ArrayList<Classifier> actionset = new ArrayList<>();
 
