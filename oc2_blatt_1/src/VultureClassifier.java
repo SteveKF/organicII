@@ -12,34 +12,22 @@ public class VultureClassifier {
     private Classifier[] classifier;
     private int action;
     private Position previousTargetPosition;
+    
 
     public VultureClassifier() {
-        //initialize classifier
-        classifier = new Classifier[Classifier.NUM_CONDITIONS];
-        /*
-        // new (unlearnt) classifier
-        for(int i=0;i<classifier.length;i++) {
-            try {
-				classifier[i] = new Classifier();
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        } 
-        */
-     // classifier that uses the saved parameters
-        for(int i=0;i<classifier.length;i++) {
+    	
+		// initialize classifier
+		classifier = new Classifier[Classifier.NUM_CONDITIONS];
+			// classifier that uses the saved parameters
+			for (int i = 0; i < classifier.length; i++) {
 				try {
 					classifier[i] = new Classifier(i);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-        }
-    }
+			}
+	}
 
     public void initializeEnvironment(Unit unit, Unit target) {
         if(target == null){
@@ -68,7 +56,7 @@ public class VultureClassifier {
 
             //updates parameters
             updateParameters(actionset, predictionarray);
-            
+
             for(int i = 0; i < classifier.length; i++){
             	try {
 					writeParameters(i);

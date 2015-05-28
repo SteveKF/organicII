@@ -29,35 +29,38 @@ public class Classifier {
 
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.15;
+    
+    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
 
 
-    public Classifier() throws FileNotFoundException, UnsupportedEncodingException {
-        //Initialize start parameters for unlearnt classifier
-        fitness = 20;
-        precision = 0.00001;
-        error = 0.000001;
-        condition = false;
-        action = -1;
-        reward = 1;
-    }
+
     
     public Classifier(int index) throws IOException {
-    	
-    	String[] parameterArray = new String[5];
-    	int i = 0;
-    	BufferedReader br = new BufferedReader(new FileReader("parameters"+index+".txt"));
-    	String line;
-        while ((line = br.readLine()) != null) {
-           parameterArray[i] = line;
-        	i++;
-        }
-        //Initialize with established start parameters
-        fitness = Double.parseDouble(parameterArray[2]);
-        precision = Double.parseDouble(parameterArray[0]);
-        error = Double.parseDouble(parameterArray[1]);
-        reward = Double.parseDouble(parameterArray[3]);
-        
-        br.close();
+		if (unlearnt == false) {
+			String[] parameterArray = new String[5];
+			int i = 0;
+			BufferedReader br = new BufferedReader(new FileReader("parameters"
+					+ index + ".txt"));
+			String line;
+			while ((line = br.readLine()) != null) {
+				parameterArray[i] = line;
+				i++;
+			}
+			// Initialize with established start parameters
+			fitness = Double.parseDouble(parameterArray[2]);
+			precision = Double.parseDouble(parameterArray[0]);
+			error = Double.parseDouble(parameterArray[1]);
+			reward = Double.parseDouble(parameterArray[3]);
+
+			br.close();
+		} else {
+			fitness = 20;
+	        precision = 0.00001;
+	        error = 0.000001;
+	        condition = false;
+	        action = -1;
+	        reward = 1;
+		}
     }
 
     public void setCondition(int index, Unit unit, Unit target) {
