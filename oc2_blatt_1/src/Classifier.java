@@ -41,10 +41,11 @@ public class Classifier {
         reward = 1;
     }
     
-    public Classifier(boolean useExistingParameters) throws IOException {
+    public Classifier(int index) throws IOException {
+    	
     	String[] parameterArray = new String[5];
     	int i = 0;
-    	BufferedReader br = new BufferedReader(new FileReader("parameters.txt"));
+    	BufferedReader br = new BufferedReader(new FileReader("parameters"+index+".txt"));
     	String line;
         while ((line = br.readLine()) != null) {
            parameterArray[i] = line;
@@ -54,7 +55,6 @@ public class Classifier {
         fitness = Double.parseDouble(parameterArray[2]);
         precision = Double.parseDouble(parameterArray[0]);
         error = Double.parseDouble(parameterArray[1]);
-        condition = Boolean.parseBoolean(parameterArray[4]);
         reward = Double.parseDouble(parameterArray[3]);
         
         br.close();
@@ -113,7 +113,7 @@ public class Classifier {
 
     public void update(double[] predictionarray) throws FileNotFoundException, UnsupportedEncodingException {
     	
-    	PrintWriter writer = new PrintWriter("parameters.txt", "UTF-8");
+    	
     	
         //update precision
         precision = precision + BETA * (reward-precision);
@@ -137,15 +137,7 @@ public class Classifier {
         //prepare condition parameter for next iteration
         condition = false;
         
-        writer.println(precision); // 0
-        writer.println(error);		// 1
-        writer.println(fitness);	// 2
-        writer.println(reward);		// 3
-        writer.println(condition);	// 4
         
-        //System.out.println("Parameters updated in text file");
-        
-        writer.close();
     }
 
 
@@ -186,6 +178,16 @@ public class Classifier {
     public double getPrecision() {
 
         return precision;
+    }
+    
+    public double getReward() {
+
+        return reward;
+    }
+    
+    public double getError() {
+
+        return error;
     }
 
 }

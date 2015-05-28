@@ -3,6 +3,7 @@ import jnibwapi.Unit;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -32,7 +33,7 @@ public class VultureClassifier {
      // classifier that uses the saved parameters
         for(int i=0;i<classifier.length;i++) {
 				try {
-					classifier[i] = new Classifier(true);
+					classifier[i] = new Classifier(i);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -67,6 +68,16 @@ public class VultureClassifier {
 
             //updates parameters
             updateParameters(actionset, predictionarray);
+            
+            for(int i = 0; i < classifier.length; i++){
+            	try {
+					writeParameters(i);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+            }
         }
     }
 
@@ -146,6 +157,18 @@ public class VultureClassifier {
                 }
             }
         }
+    }
+    
+    public void writeParameters(int index) throws FileNotFoundException, UnsupportedEncodingException{
+    	
+    	PrintWriter writer = new PrintWriter("parameters"+index+".txt", "UTF-8");
+    	
+    	writer.println(classifier[index].getPrecision()); // 0
+        writer.println(classifier[index].getError());		// 1
+        writer.println(classifier[index].getFitness());	// 2
+        writer.println(classifier[index].getReward());		// 3
+        
+        writer.close();
     }
 }
 
