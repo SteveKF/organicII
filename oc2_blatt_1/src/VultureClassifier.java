@@ -12,22 +12,21 @@ public class VultureClassifier {
     private Classifier[] classifier;
     private int action;
     private Position previousTargetPosition;
-    
+
 
     public VultureClassifier() {
-    	
-		// initialize classifier
-		classifier = new Classifier[Classifier.NUM_CONDITIONS];
-			// classifier that uses the saved parameters
-			for (int i = 0; i < classifier.length; i++) {
-				try {
-					classifier[i] = new Classifier(i);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-	}
+
+        // initialize classifier
+        classifier = new Classifier[Classifier.NUM_CONDITIONS];
+        // classifier that uses the saved parameters
+        for (int i = 0; i < classifier.length; i++) {
+            try {
+                classifier[i] = new Classifier(i);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public void initializeEnvironment(Unit unit, Unit target) {
         if(target == null){
@@ -57,14 +56,15 @@ public class VultureClassifier {
             //updates parameters
             updateParameters(actionset, predictionarray);
 
+            //writes new parameters in files
             for(int i = 0; i < classifier.length; i++){
-            	try {
-					writeParameters(i);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
+                try {
+                    writeParameters(i);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -117,7 +117,7 @@ public class VultureClassifier {
 
         action = index;
         //System.out.println("Action: "+ action);
-        
+
         ArrayList<Classifier> actionset = new ArrayList<>();
 
         for(int i=0;i<matchset.size();i++){
@@ -136,27 +136,26 @@ public class VultureClassifier {
             for(int j=0;j<classifier.length;j++){
                 if(actionset.get(i)==classifier[j]){
                     try {
-						classifier[j].update(predictionarray);
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (UnsupportedEncodingException e) {
-						e.printStackTrace();
-					}
+                        classifier[j].update(predictionarray);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
-    
+
     public void writeParameters(int index) throws FileNotFoundException, UnsupportedEncodingException{
-    	
-    	PrintWriter writer = new PrintWriter("parameters"+index+".txt", "UTF-8");
-    	
-    	writer.println(classifier[index].getPrecision()); // 0
+
+        PrintWriter writer = new PrintWriter("parameters"+index+".txt", "UTF-8");
+
+        writer.println(classifier[index].getPrecision()); // 0
         writer.println(classifier[index].getError());		// 1
         writer.println(classifier[index].getFitness());	// 2
         writer.println(classifier[index].getReward());		// 3
-        
+
         writer.close();
     }
 }
-

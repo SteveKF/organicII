@@ -18,49 +18,68 @@ public class Classifier {
     private double error;
     private double fitness;
 
+    private int hitpoints;
+    private int enemyShieldpoints;
+    private int enemyHitpoints;
+    private int previousHitpoints=0;
+    private int previousEnemyShieldpoints=0;
+    private int previousEnemyHitpoints=0;
+
     private double reward;
     private static final int ENEMYRANGE = UnitType.UnitTypes.Protoss_Zealot.getGroundWeapon().getMaxRange();
     private static final int MAXRANGE = UnitType.UnitTypes.Terran_Vulture.getGroundWeapon().getMaxRange();
     private Unit unit;
     private Unit target;
 
-    public static final int NUM_CONDITIONS = 4;
+    public static final int NUM_CONDITIONS = 6;
     public static final int NUM_ACTIONS = 2;
 
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.15;
-    
-    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
+
+    private static boolean unlearnt = true; // set false if you want to use the preexisting parameters
 
 
 
-    
+
     public Classifier(int index) throws IOException {
-		if (unlearnt == false) {
-			String[] parameterArray = new String[5];
-			int i = 0;
-			BufferedReader br = new BufferedReader(new FileReader("parameters"
-					+ index + ".txt"));
-			String line;
-			while ((line = br.readLine()) != null) {
-				parameterArray[i] = line;
-				i++;
-			}
-			// Initialize with established start parameters
-			fitness = Double.parseDouble(parameterArray[2]);
-			precision = Double.parseDouble(parameterArray[0]);
-			error = Double.parseDouble(parameterArray[1]);
-			reward = Double.parseDouble(parameterArray[3]);
 
-			br.close();
-		} else {
-			fitness = 20;
-	        precision = 0.00001;
-	        error = 0.000001;
-	        condition = false;
-	        action = -1;
-	        reward = 1;
-		}
+        condition = false;
+        action = -1;
+
+
+        if (unlearnt == false) {
+            String[] parameterArray = new String[5];
+            int i = 0;
+            BufferedReader br = new BufferedReader(new FileReader("parameters"
+                    + index + ".txt"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                parameterArray[i] = line;
+                i++;
+            }
+            // Initialize with established start parameters
+            precision = Double.parseDouble(parameterArray[0]);
+            error = Double.parseDouble(parameterArray[1]);
+            fitness = Double.parseDouble(parameterArray[2]);
+            reward = Double.parseDouble(parameterArray[3]);
+
+            br.close();
+        } else {
+            fitness = 20;
+            precision = 0.00001;
+            error = 0.000001;
+            reward = 1;
+
+            PrintWriter writer = new PrintWriter("parameters"+index+".txt", "UTF-8");
+
+            writer.println(precision);
+            writer.println(error);
+            writer.println(fitness);
+            writer.println(reward);
+
+            writer.close();
+        }
     }
 
     public void setCondition(int index, Unit unit, Unit target) {
@@ -68,19 +87,24 @@ public class Classifier {
         this.unit = unit;
         this.target = target;
 
+
+
+
         if (index > NUM_CONDITIONS) {
             System.err.println("Error");
         }
         //sets condition true if environment matches
+
+
         switch (index) {
             case 0:
-                if (unit.getDistance(target) > MAXRANGE) {
+                if (unit.getDistance(target) > 20) {
                     condition = true;
                     action = 1;
                 }
                 break;
             case 1:
-                if (unit.getDistance(target) <= ENEMYRANGE) {
+                if (unit.getDistance(target) < 5) {
                     condition = true;
                     action = 0;
                 }
@@ -97,10 +121,23 @@ public class Classifier {
                     action = 0;
                 }
                 break;
+            case 4:
+                if(unit.getDistance(target) < 20){
+                    condition = true;
+                    action = 1;
+                }
+                break;
+            case 5:
+                if (unit.getDistance(target) > 5) {
+                    condition = true;
+                    action = 0;
+                }
+                break;
         }
     }
 
     public static void selectAction(int action, Unit unit, Unit target) {
+
 
         //move away from enemy
         if (action == 0) {
@@ -115,9 +152,9 @@ public class Classifier {
     }
 
     public void update(double[] predictionarray) throws FileNotFoundException, UnsupportedEncodingException {
-    	
-    	
-    	
+
+
+
         //update precision
         precision = precision + BETA * (reward-precision);
 
@@ -139,28 +176,41 @@ public class Classifier {
 
         //prepare condition parameter for next iteration
         condition = false;
-        
-        
+
+
     }
 
 
-    /**
-     * TODO: setReward unnötig??
-     */
     private void setReward(){
 
-        if(unit.isAttackFrame())
-            reward += +2.5;
+        hitpoints = unit.getHitPoints();
+        enemyShieldpoints = target.getShields();
+        enemyHitpoints = target.getHitPoints();
 
-        if(unit.isUnderAttack())
+
+        if(hitpoints<previousHitpoints)
+            reward += -1;
+
+
+        if(enemyShieldpoints<previousEnemyShieldpoints)
+            reward += -1;
+
+
+        if(enemyHitpoints<previousEnemyHitpoints)
+            reward += +1;
+
+        previousHitpoints = hitpoints;
+        previousEnemyHitpoints = enemyHitpoints;
+        previousEnemyShieldpoints = enemyShieldpoints;
+
+        /* if(unit.isUnderAttack())
             reward += -10;
 
-        if(unit.getDistance(target)<ENEMYRANGE)
-            reward += -5;
 
         if(unit.attack(target,false)){
             reward += +5;
         }
+        */
     }
 
     public boolean getCondition() {
@@ -182,12 +232,12 @@ public class Classifier {
 
         return precision;
     }
-    
+
     public double getReward() {
 
         return reward;
     }
-    
+
     public double getError() {
 
         return error;
