@@ -31,13 +31,13 @@ public class Classifier {
     private Unit unit;
     private Unit target;
 
-    public static final int NUM_CONDITIONS = 6;
+    public static final int NUM_CONDITIONS = 12;
     public static final int NUM_ACTIONS = 2;
 
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.15;
 
-    private static boolean unlearnt = true; // set false if you want to use the preexisting parameters
+    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
 
 
 
@@ -133,6 +133,42 @@ public class Classifier {
                     action = 0;
                 }
                 break;
+            case 6:
+                if(unit.getGroundWeaponCooldown()==0){
+                    condition = true;
+                    action = 0;
+                }
+                break;
+            case 7:
+                if(target.getHitPoints()<target.getInitialHitPoints()){
+                    condition = true;
+                    action = 1;
+                }
+                break;
+            case 8:
+                if(target.isAttacking()){
+                    condition = true;
+                    action = 0;
+                }
+                break;
+            case 9:
+                if(unit.isMoving()){
+                    condition = true;
+                    action = 1;
+                }
+                break;
+            case 10:
+                if(unit.isStartingAttack()){
+                    condition = true;
+                    action = 1;
+                }
+                break;
+            case 11:
+                if(unit.isStuck()){
+                    condition = true;
+                    action = 1;
+                }
+                break;
         }
     }
 
@@ -141,7 +177,8 @@ public class Classifier {
 
         //move away from enemy
         if (action == 0) {
-            unit.move(new Position(target.getPosition().getPX() - MAXRANGE, target.getPosition().getPY() - MAXRANGE), false);
+               // unit.move(new Position(target.getPosition().getPX() - MAXRANGE, target.getPosition().getPY() - MAXRANGE), false);
+            unit.attack(new Position(target.getPosition().getPX() - MAXRANGE, target.getPosition().getPY() - MAXRANGE), false);
         }
 
         //attack enemy
@@ -155,13 +192,25 @@ public class Classifier {
 
 
 
-        //update precision
+        //update precision#
+        if(precision >= 1000000000)
+            precision = 1000000000;
+        if(precision <= -1000000000)
+            precision = -1000000000;
         precision = precision + BETA * (reward-precision);
 
         //update error
+        if(error >= 1000000000)
+            error = 1000000000;
+        if(error <= -1000000000)
+            error = -1000000000;
         error = error + BETA * (Math.abs(reward-precision)-error);
 
         //update fitness
+        if(fitness >= 1000000000)
+            fitness = 1000000000;
+        if(fitness <= -1000000000)
+            fitness = -1000000000;
         fitness = fitness + BETA *(1.0/error - fitness);
 
         //update reward
@@ -193,11 +242,18 @@ public class Classifier {
 
 
         if(enemyShieldpoints<previousEnemyShieldpoints)
-            reward += -1;
+            reward += +1;
 
 
         if(enemyHitpoints<previousEnemyHitpoints)
-            reward += +1;
+            reward += +10;
+
+        if(enemyHitpoints>previousEnemyHitpoints)
+            reward += +10;
+        if(unit.isStartingAttack())
+            reward += +15;
+        if(!unit.isAttacking())
+            reward += -100;
 
         previousHitpoints = hitpoints;
         previousEnemyHitpoints = enemyHitpoints;
