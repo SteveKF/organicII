@@ -39,14 +39,17 @@ public class VultureAI  implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchFrame() {
-        
+
+        vulture.printStuff(frame);
+
         vulture.step();
 
 
-        if (frame % 1000 == 0) {
+        /*if (frame % 1000 == 0) {
             System.out.println("Frame: " + frame);
-        }
+        }*/
         frame++;
+
     }
 
     @Override

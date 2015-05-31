@@ -38,7 +38,7 @@ public class Classifier {
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.0009; //learn rate
 
-    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
+    private static boolean unlearnt = true; // set false if you want to use the preexisting parameters
 
 
     public Classifier(int index) throws IOException {
