@@ -24,11 +24,30 @@ public class Vulture {
 
         classifier = new VultureClassifier();
 
+
+    }
+
+
+    public void printStuff(int frame){
+        if(frame % 500==0) {
+            String s1 = Integer.toString(frame);
+            StringBuffer s2 = new StringBuffer("");
+            for(Unit x: enemyUnits){
+                s2.append(x.getHitPoints());
+                s2.append(",");
+                s2.append(x.getShields());
+                s2.append(",");
+            }
+
+            String s3 = Double.toString(unit.getHitPoints());
+            System.out.printf("%s,%s%s\n",s1,s2.toString(),s3);
+        }
     }
 
     public void step() {
 
         Unit target = getClosestEnemy();
+
 
         //updates environment
         classifier.initializeEnvironment(unit, target);
