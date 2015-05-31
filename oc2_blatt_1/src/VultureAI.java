@@ -33,7 +33,6 @@ public class VultureAI  implements BWAPIEventListener, Runnable {
         frame = 0;
 
         bwapi.enablePerfectInformation();
-        bwapi.setGameSpeed(0);
         bwapi.enableUserInput();
         bwapi.setGameSpeed(0);
     }
@@ -42,6 +41,7 @@ public class VultureAI  implements BWAPIEventListener, Runnable {
     public void matchFrame() {
         
         vulture.step();
+
 
         if (frame % 1000 == 0) {
             System.out.println("Frame: " + frame);

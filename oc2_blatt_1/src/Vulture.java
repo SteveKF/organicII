@@ -20,7 +20,8 @@ public class Vulture {
         this.bwapi = bwapi;
         this.enemyUnits = enemyUnits;
 
-        //new classifier of our unit vulture
+        //new classifier of our vulture unit
+
         classifier = new VultureClassifier();
 
     }
