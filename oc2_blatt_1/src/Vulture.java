@@ -29,7 +29,7 @@ public class Vulture {
 
 
     public void printStuff(int frame){
-        if(frame % 500==0) {
+       /* if(frame % 100==0) {
             String s1 = Integer.toString(frame);
             StringBuffer s2 = new StringBuffer("");
             for(Unit x: enemyUnits){
@@ -40,8 +40,10 @@ public class Vulture {
             }
 
             String s3 = Double.toString(unit.getHitPoints());
-            System.out.printf("%s,%s%s\n",s1,s2.toString(),s3);
-        }
+            //System.out.printf("%s,%s%s\n",s1,s2.toString(),s3);
+            System.out.printf("%s,%s\n",s1,s3);
+            
+        }*/
     }
 
     public void step() {
