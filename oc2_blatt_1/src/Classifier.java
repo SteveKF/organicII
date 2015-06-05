@@ -17,6 +17,7 @@ public class Classifier {
     private double precision;
     private double error;
     private double fitness;
+    private int[] geneticArray = new int[NUM_CONDITIONS];
 
     private int hitpoints;
     private int enemyShieldpoints;
@@ -50,7 +51,7 @@ public class Classifier {
         if (unlearnt == false) {
             String[] parameterArray = new String[5];
             int i = 0;
-            BufferedReader br = new BufferedReader(new FileReader("data/parameters"
+            BufferedReader br = new BufferedReader(new FileReader("parameters"
                     + index + ".txt"));
             String line;
             while ((line = br.readLine()) != null) {
@@ -62,6 +63,12 @@ public class Classifier {
             error = Double.parseDouble(parameterArray[1]);
             fitness = Double.parseDouble(parameterArray[2]);
             reward = Double.parseDouble(parameterArray[3]);
+            StringBuffer bf = new StringBuffer(parameterArray[4]);
+            for(int j=0;j<geneticArray.length;j++){
+            	geneticArray[j]=bf.charAt(j);
+            }
+       
+            
 
             br.close();
             //executes unlearnt classifier
@@ -70,6 +77,10 @@ public class Classifier {
             precision = 0.00001;
             error = 0.000001;
             reward = 1;
+            for (int j=0; j<geneticArray.length;j++){
+            	geneticArray[j] = 0;
+            }
+            geneticArray[index] = 1;
 
             PrintWriter writer = new PrintWriter("parameters" + index + ".txt", "UTF-8");
 
@@ -77,6 +88,9 @@ public class Classifier {
             writer.println(error);
             writer.println(fitness);
             writer.println(reward);
+            for(int j=0; j<geneticArray.length; j++){
+            	writer.print(geneticArray[j]);
+            }
 
             writer.close();
         }
@@ -84,201 +98,199 @@ public class Classifier {
 
     public void setCondition(int index, Unit unit, Unit target) {
 
-        //changes condition from last frame to false so that it can check condition for next frame
-        condition = false;
+		// changes condition from last frame to false so that it can check
+		// condition for next frame
+		condition = false;
 
-        //saves environment
-        this.unit = unit;
-        this.target = target;
+		// saves environment
+		this.unit = unit;
+		this.target = target;
 
+		if (index > NUM_CONDITIONS) {
+			System.err.println("Error");
+		}
+		// sets condition true if environment matches
 
-        if (index > NUM_CONDITIONS) {
-            System.err.println("Error");
-        }
-        //sets condition true if environment matches
-
-        switch (index) {
-            case 0:
-                if(unit.isMoving()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 1:
-                if(unit.isMoving()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 2:
-                if(previousEnemyShieldpoints>=target.getShields()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 3:
-                if(previousEnemyShieldpoints>=target.getShields()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 4:
-                if(previousDistance<unit.getDistance(target)){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 5:
-                if(previousDistance<unit.getDistance(target)){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 6:
-                if(previousDistance>=unit.getDistance(target)){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 7:
-                if(previousDistance>=unit.getDistance(target)){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 8:
-                if(unit.isUnderAttack()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 9:
-                if(unit.isUnderAttack()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 10:
-                if(previousHitpoints>=unit.getHitPoints()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 11:
-                if(previousHitpoints>=unit.getHitPoints()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 12:
-                if(previousEnemyHitpoints>=target.getHitPoints()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 13:
-                if(previousEnemyHitpoints>=target.getHitPoints()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 14:
-                if(unit.isAttackFrame()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 15:
-                if(unit.isAttackFrame()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 16:
-                if(previousHitpoints<unit.getHitPoints()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 17:
-                if(previousHitpoints<unit.getHitPoints()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 18:
-                if(previousEnemyHitpoints<target.getHitPoints()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 19:
-                if(previousEnemyHitpoints<target.getHitPoints()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 20:
-                if(target.isUnderAttack()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 21:
-                if(target.isUnderAttack()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 22:
-                if(target.isAttackFrame()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 23:
-                if(target.isAttackFrame()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 24:
-                if(target.isMoving()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 25:
-                if(target.isMoving()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 26:
-                if(!target.isMoving()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 27:
-                if(!target.isMoving()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-            case 28:
-                if(!target.isUnderAttack()){
-                    condition = true;
-                    action = 0;
-                }
-                break;
-            case 29:
-                if(!target.isUnderAttack()){
-                    condition = true;
-                    action = 1;
-                }
-                break;
-        }
+		if (geneticArray[0] == 1) {
+			if (unit.isMoving()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[1] == 1) {
+			if (unit.isMoving()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[2] == 1) {
+			if (previousEnemyShieldpoints >= target.getShields()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[3] == 1) {
+			if (previousEnemyShieldpoints >= target.getShields()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[4] == 1) {
+			if (previousDistance < unit.getDistance(target)) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[5] == 1) {
+			if (previousDistance < unit.getDistance(target)) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[6] == 1) {
+			if (previousDistance >= unit.getDistance(target)) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[7] == 1) {
+			if (previousDistance >= unit.getDistance(target)) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[8] == 1) {
+			if (unit.isUnderAttack()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[9] == 1) {
+			if (unit.isUnderAttack()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[10] == 1) {
+			if (previousHitpoints >= unit.getHitPoints()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[11] == 1) {
+			if (previousHitpoints >= unit.getHitPoints()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[12] == 1) {
+			if (previousEnemyHitpoints >= target.getHitPoints()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[13] == 1) {
+			if (previousEnemyHitpoints >= target.getHitPoints()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[14] == 1) {
+			if (unit.isAttackFrame()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[15] == 1) {
+			if (unit.isAttackFrame()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[16] == 1) {
+			if (previousHitpoints < unit.getHitPoints()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[17] == 1) {
+			if (previousHitpoints < unit.getHitPoints()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[18] == 1) {
+			if (previousEnemyHitpoints < target.getHitPoints()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[19] == 1) {
+			if (previousEnemyHitpoints < target.getHitPoints()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[20] == 1) {
+			if (target.isUnderAttack()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[21] == 1) {
+			if (target.isUnderAttack()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[22] == 1) {
+			if (target.isAttackFrame()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[23] == 1) {
+			if (target.isAttackFrame()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[24] == 1) {
+			if (target.isMoving()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[25] == 1) {
+			if (target.isMoving()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[26] == 1) {
+			if (!target.isMoving()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[27] == 1) {
+			if (!target.isMoving()) {
+				condition = true;
+				action = 1;
+			}
+		}
+		if (geneticArray[28] == 1) {
+			if (!target.isUnderAttack()) {
+				condition = true;
+				action = 0;
+			}
+		}
+		if (geneticArray[29] == 1) {
+			if (!target.isUnderAttack()) {
+				condition = true;
+				action = 1;
+			}
+		}
 
     }
 
@@ -424,6 +436,11 @@ public class Classifier {
     public double getError() {
 
         return error;
+    }
+    
+    public int[] getGeneticArray() {
+
+        return geneticArray;
     }
 
 }

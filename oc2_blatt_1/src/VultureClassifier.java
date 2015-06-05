@@ -179,6 +179,11 @@ public class VultureClassifier{
         writer.println(classifier[index].getError());		// 1
         writer.println(classifier[index].getFitness());	// 2
         writer.println(classifier[index].getReward());		// 3
+        //writer.println(classifier[index].getGeneticArray());		// 4
+        for(int j=0; j<classifier[index].NUM_CONDITIONS; j++){
+        	writer.print(classifier[index].getGeneticArray()[j]);
+        }
+        
 
         writer.close();
     }
