@@ -39,7 +39,7 @@ public class Classifier {
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.0009; //learn rate
 
-    private static boolean unlearnt = true; // set false if you want to use the preexisting parameters
+    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
 
 
     public Classifier(int index) throws IOException {
@@ -65,7 +65,7 @@ public class Classifier {
             reward = Double.parseDouble(parameterArray[3]);
             StringBuffer bf = new StringBuffer(parameterArray[4]);
             for(int j=0;j<geneticArray.length;j++){
-            	geneticArray[j]=bf.charAt(j);
+            	geneticArray[j]=((int) bf.charAt(j))-48;
             }
        
             
@@ -442,5 +442,21 @@ public class Classifier {
 
         return geneticArray;
     }
+
+	public void setPrecision(double precision){
+		this.precision = precision;
+	}
+
+	public void setError(double error){
+		this.error = error;
+	}
+
+	public void setFitness(double fitness){
+		this.fitness = fitness;
+	}
+
+	public void setGeneticArray(int index, int value){
+		geneticArray[index] = value;
+	}
 
 }

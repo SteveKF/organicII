@@ -56,9 +56,6 @@ public class Vulture {
 
     }
 
-    /**
-     * TODO: Unnötig geworden?
-     */
     private void move(Unit target) {
         unit.move(new Position(target.getPosition().getPX(), target.getPosition().getPY()), false);
     }
