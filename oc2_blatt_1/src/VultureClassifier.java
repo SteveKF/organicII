@@ -2,12 +2,10 @@ import com.sun.org.apache.xpath.internal.SourceTree;
 import jnibwapi.Position;
 import jnibwapi.Unit;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class VultureClassifier {
@@ -18,10 +16,18 @@ public class VultureClassifier {
 
     private Position previousTargetPosition;
 
-    public VultureClassifier() {
-        /**
-         * TODO: Reads NUM_CONDITIONS from a file
-         */
+    public VultureClassifier() throws Exception{
+
+        //reads parameter NUM_CONDITION from file
+        if(Classifier.unlearnt == false) {
+            String parameter = "";
+            BufferedReader br = new BufferedReader(new FileReader("general.txt"));
+            String line;
+            if ((line = br.readLine()) != null)
+                parameter = line;
+            // Initialize with established start parameters
+            Classifier.setNumConditions(Integer.parseInt(parameter));
+        }
 
         // initialize classifier
         classifier = new ArrayList<>();
@@ -36,7 +42,7 @@ public class VultureClassifier {
     }
 
 
-    public void initializeEnvironment(Unit unit, Unit target) {
+    public void initializeEnvironment(Unit unit, Unit target) throws Exception{
         if (target == null) {
             //moves to previous target Position(+ random number of map size) if no target is found
             Random random = new Random();
@@ -61,6 +67,12 @@ public class VultureClassifier {
             ArrayList<Classifier> actionset = generateActionSet(predictionarray, matchset);
 
 
+            //run genetic algorithm
+            /**
+             * TODO: uncomment if implementation complete
+             */
+            //runGeneticAlgorithm(actionset);
+
             //runs best action
             Classifier.selectAction(action, unit, target);
 
@@ -78,6 +90,11 @@ public class VultureClassifier {
                     e.printStackTrace();
                 }
             }
+
+            //write NUM_CONDITIONS to a file
+            PrintWriter writer2 = new PrintWriter("general.txt", "UTF-8");
+            writer2.println(Classifier.NUM_CONDITIONS);
+            writer2.close();
         }
     }
 
@@ -200,11 +217,17 @@ public class VultureClassifier {
         Classifier parent1 = selectOffspring(actionset);
         Classifier parent2 = selectOffspring(actionset);
 
+        if(parent1 == null || parent2 == null)
+            return;
+
         Classifier child[] = new Classifier[2];
         child[0] = parent1;
         child[1] = parent2;
 
         Random rn = new Random();
+        /**
+         * TODO: Which probability to choose
+         */
         int num1 = 500; //probability 0.5
         double random = rn.nextDouble() * 1000;
         random = Math.round(random);
@@ -212,6 +235,10 @@ public class VultureClassifier {
 
         if ((num1 - num2) > 0) {
             applyCrossover(child[0], child[1]);
+
+            /**
+             * TODO: First multiplication or first division
+             */
 
             child[0].setPrecision((parent1.getPrecision() + parent2.getPrecision()) / 2);
             child[0].setError(0.25 * ((parent1.getError() + parent2.getError()) / 2));
@@ -285,6 +312,9 @@ public class VultureClassifier {
         int i = 0;
         do{
             Random rn = new Random();
+            /**
+             * TODO: Which probability to choose
+             */
             int num1 = 350; //probability 0.35
             double random = rn.nextDouble() * 1000;
             random = Math.round(random);
@@ -304,6 +334,55 @@ public class VultureClassifier {
 
     }
 
+    public void insertPopulation(Classifier cl) {
+        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+            if(Arrays.equals(classifier.get(i).getGeneticArray(),cl.getGeneticArray()) && classifier.get(i).getAction() == cl.getAction()){
+                return;
+            }
+            Classifier.NUM_CONDITIONS++;
+            classifier.add(cl);
+        }
+    }
+
+    public void deletePopulation() {
+        if(Classifier.NUM_CONDITIONS < 60)
+            return;
+
+        double votesum = 0;
+        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+            votesum += deletionVote(classifier.get(i));
+        }
+
+        Random rn = new Random();
+        double choicepoint = rn.nextDouble() * votesum;
+        votesum = 0;
+        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+            votesum += deletionVote(classifier.get(i));
+            if((int)votesum >= (int)choicepoint) {
+                if (Classifier.NUM_CONDITIONS > 1) {
+                    Classifier.NUM_CONDITIONS--;
+                } else {
+                    classifier.remove(i);
+                }
+                return;
+            }
+        }
+    }
+
+    public double deletionVote(Classifier cl){
+        double vote = Classifier.NUM_ACTIONS * Classifier.NUM_CONDITIONS;
+        int fitnesssum = 0;
+        for(int i=0;i< Classifier.NUM_CONDITIONS;i++)
+            fitnesssum += classifier.get(i).getFitness();
+        int averagefitness = fitnesssum / Classifier.NUM_CONDITIONS;
+        /**
+         * TODO: implement if statement
+         */
+        if(true)
+            vote = vote * averagefitness / (cl.getFitness());
+        return vote;
+    }
+
     public boolean doGASubsumption() {
         /**
          * TODO: Implementation
@@ -316,23 +395,6 @@ public class VultureClassifier {
          * TODO: Implementation
          */
         return true;
-    }
-
-    public void insertPopulation(Classifier cl) {
-        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
-            if(classifier.get(i).getGeneticArray() == cl.getGeneticArray() && classifier.get(i).getAction() == cl.getAction()){
-                return;
-            }
-			  /**
-         * TODO: Change NUM_CONDITIONS from final to just static # wirte this variable to a file        
-		*/
-        //Classifier.NUM_CONDITIONS++;
-        classifier.add(cl);
-        }
-    }
-
-    public void deletePopulation() {
-
     }
 
 }

@@ -22,7 +22,11 @@ public class Vulture {
 
         //new classifier of our vulture unit
 
-        classifier = new VultureClassifier();
+        try {
+            classifier = new VultureClassifier();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -52,7 +56,11 @@ public class Vulture {
 
 
         //updates environment
-        classifier.initializeEnvironment(unit, target);
+        try {
+            classifier.initializeEnvironment(unit, target);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 

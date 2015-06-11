@@ -33,13 +33,13 @@ public class Classifier {
     private Unit unit;
     private Unit target;
 
-    public static final int NUM_CONDITIONS = 30; //number of classifiers
+    public static int NUM_CONDITIONS = 30; //number of classifiers
     public static final int NUM_ACTIONS = 2; //number of actions
 
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.0009; //learn rate
 
-    private static boolean unlearnt = false; // set false if you want to use the preexisting parameters
+    public static boolean unlearnt = false; // set false if you want to use the preexisting parameters
 
 
     public Classifier(int index) throws IOException {
@@ -457,6 +457,10 @@ public class Classifier {
 
 	public void setGeneticArray(int index, int value){
 		geneticArray[index] = value;
+	}
+
+	public static void setNumConditions(int conditions){
+		NUM_CONDITIONS = conditions;
 	}
 
 }
