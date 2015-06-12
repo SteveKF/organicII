@@ -39,7 +39,9 @@ public class Classifier {
     private final double DISCOUNT_FACTOR = 0.71;
     private final double BETA = 0.0009; //learn rate
 
-    public static boolean unlearnt = false; // set false if you want to use the preexisting parameters
+    public static boolean unlearnt = true; // set false if you want to use the preexisting parameters
+    
+    private int callCounter = 0;
 
 
     public Classifier(int index) throws IOException {
@@ -49,7 +51,7 @@ public class Classifier {
 
         //executes learnt classifier
         if (unlearnt == false) {
-            String[] parameterArray = new String[5];
+            String[] parameterArray = new String[6];
             int i = 0;
             BufferedReader br = new BufferedReader(new FileReader("parameters"
                     + index + ".txt"));
@@ -63,11 +65,12 @@ public class Classifier {
             error = Double.parseDouble(parameterArray[1]);
             fitness = Double.parseDouble(parameterArray[2]);
             reward = Double.parseDouble(parameterArray[3]);
-            StringBuffer bf = new StringBuffer(parameterArray[4]);
+            callCounter = Integer.parseInt(parameterArray[4]);
+            StringBuffer bf = new StringBuffer(parameterArray[5]);
             for(int j=0;j<geneticArray.length;j++){
             	geneticArray[j]=((int) bf.charAt(j))-48;
             }
-       
+            
             
 
             br.close();
@@ -81,6 +84,7 @@ public class Classifier {
             	geneticArray[j] = 0;
             }
             geneticArray[index] = 1;
+            callCounter = 0;
 
             PrintWriter writer = new PrintWriter("parameters" + index + ".txt", "UTF-8");
 
@@ -88,9 +92,11 @@ public class Classifier {
             writer.println(error);
             writer.println(fitness);
             writer.println(reward);
+            writer.println(callCounter);
             for(int j=0; j<geneticArray.length; j++){
             	writer.print(geneticArray[j]);
             }
+            
 
             writer.close();
         }
@@ -461,6 +467,14 @@ public class Classifier {
 
 	public static void setNumConditions(int conditions){
 		NUM_CONDITIONS = conditions;
+	}
+	
+	public int getCallCounter(){
+		return callCounter;
+	}
+	
+	public void increaseCallCounter(){
+		callCounter++;
 	}
 
 }

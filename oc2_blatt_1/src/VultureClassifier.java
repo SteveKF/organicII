@@ -66,12 +66,14 @@ public class VultureClassifier {
             //generate actionset
             ArrayList<Classifier> actionset = generateActionSet(predictionarray, matchset);
 
-
+            for(int j = 0; j<actionset.size(); j++){
+            	classifier.get(j).increaseCallCounter();
+            }
             //run genetic algorithm
             /**
              * TODO: uncomment if implementation complete
              */
-            //runGeneticAlgorithm(actionset);
+            runGeneticAlgorithm(actionset);
 
             //runs best action
             Classifier.selectAction(action, unit, target);
@@ -96,6 +98,7 @@ public class VultureClassifier {
             writer2.println(Classifier.NUM_CONDITIONS);
             writer2.close();
         }
+        System.out.println(Classifier.NUM_CONDITIONS);
     }
 
     private ArrayList<Classifier> generateMatchSet(ArrayList<Classifier> cl) {
@@ -200,19 +203,25 @@ public class VultureClassifier {
         writer.println(classifier.get(index).getError());        // 1
         writer.println(classifier.get(index).getFitness());    // 2
         writer.println(classifier.get(index).getReward());        // 3
-        //writer.println(classifier[index].getGeneticArray());		// 4
+        writer.println(classifier.get(index).getCallCounter()); // 4
+        //writer.println(classifier[index].getGeneticArray());		// 5
         for (int j = 0; j < Classifier.NUM_CONDITIONS; j++) {
             writer.print(classifier.get(index).getGeneticArray()[j]);
         }
+        
 
 
         writer.close();
     }
 
     public void runGeneticAlgorithm(ArrayList<Classifier> actionset) {
-        /**
-         * TODO: Time constraint
-         */
+        boolean tempThreshold = false;
+        
+        for(int i = 0; i < actionset.size(); i++){
+        	if(actionset.get(i).getCallCounter() >= 100) tempThreshold = true;
+        }
+        
+        if (tempThreshold != true) return;
 
         Classifier parent1 = selectOffspring(actionset);
         Classifier parent2 = selectOffspring(actionset);
@@ -236,10 +245,6 @@ public class VultureClassifier {
         if ((num1 - num2) > 0) {
             applyCrossover(child[0], child[1]);
 
-            /**
-             * TODO: First multiplication or first division
-             */
-
             child[0].setPrecision((parent1.getPrecision() + parent2.getPrecision()) / 2);
             child[0].setError(0.25 * ((parent1.getError() + parent2.getError()) / 2));
             child[0].setFitness(0.1 * ((parent1.getFitness() + parent2.getFitness()) / 2));
@@ -250,18 +255,7 @@ public class VultureClassifier {
 
             for (int i = 0; i < child.length; i++) {
                 applyMutation(child[i]);
-                if (doGASubsumption()) {
-                    if (doesSubsume(parent1, child[i])) {
-                        //mach was
-                    } else if (doesSubsume(parent2, child[i])) {
-                    }
-                    //mach was
-                    else {
-                        insertPopulation(child[i]);
-                    }
-                } else {
-                    insertPopulation(child[i]);
-                }
+                insertPopulation(child[i]);
                 deletePopulation();
             }
 
@@ -328,10 +322,6 @@ public class VultureClassifier {
             }
         }while(i < cl.getGeneticArray().length);
 
-        /**
-         * TODO: Change action with a probability?
-         */
-
     }
 
     public void insertPopulation(Classifier cl) {
@@ -378,7 +368,7 @@ public class VultureClassifier {
         /**
          * TODO: implement if statement
          */
-        if(true)
+        if(cl.getCallCounter() >= 20 && ((int) 1000 * (cl.getFitness() / Classifier.NUM_CONDITIONS)) < ((int) 1000* (0.8 * averagefitness)))
             vote = vote * averagefitness / (cl.getFitness());
         return vote;
     }
