@@ -32,7 +32,7 @@ public class VultureClassifier {
         // initialize classifier
         classifier = new ArrayList<>();
         // classifier that uses the saved parameters
-        for (int i = 0; i < Classifier.NUM_CONDITIONS; i++) {
+        for (int i = 0; i < Classifier.NUM_CLASSIFIERS; i++) {
             try {
                 classifier.add(new Classifier(i));
             } catch (IOException e) {
@@ -55,7 +55,7 @@ public class VultureClassifier {
 
             //if environment matches classifiers it will set the condition of classifier to true
             for (int i = 0; i < classifier.size(); i++) {
-                classifier.get(i).setCondition(i, unit, target);
+                classifier.get(i).setCondition(unit, target);
             }
             //generate matchset (all classifiers with condition = true)
             ArrayList<Classifier> matchset = generateMatchSet(classifier);
@@ -95,10 +95,10 @@ public class VultureClassifier {
 
             //write NUM_CONDITIONS to a file
             PrintWriter writer2 = new PrintWriter("general.txt", "UTF-8");
-            writer2.println(Classifier.NUM_CONDITIONS);
+            writer2.println(Classifier.NUM_CLASSIFIERS);
             writer2.close();
         }
-        System.out.println(Classifier.NUM_CONDITIONS);
+        System.out.println(Classifier.NUM_CLASSIFIERS);
     }
 
     private ArrayList<Classifier> generateMatchSet(ArrayList<Classifier> cl) {
@@ -205,7 +205,7 @@ public class VultureClassifier {
         writer.println(classifier.get(index).getReward());        // 3
         writer.println(classifier.get(index).getCallCounter()); // 4
         //writer.println(classifier[index].getGeneticArray());		// 5
-        for (int j = 0; j < Classifier.NUM_CONDITIONS; j++) {
+        for (int j = 0; j < 30; j++) {
             writer.print(classifier.get(index).getGeneticArray()[j]);
         }
         
@@ -320,37 +320,41 @@ public class VultureClassifier {
                 else
                     cl.setGeneticArray(i,1);
             }
+            i++;
         }while(i < cl.getGeneticArray().length);
 
     }
 
     public void insertPopulation(Classifier cl) {
-        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+        if(Classifier.NUM_CLASSIFIERS>400){
+            return;
+        }
+        for(int i=0;i<Classifier.NUM_CLASSIFIERS;i++){
             if(Arrays.equals(classifier.get(i).getGeneticArray(),cl.getGeneticArray()) && classifier.get(i).getAction() == cl.getAction()){
                 return;
             }
-            Classifier.NUM_CONDITIONS++;
+            Classifier.NUM_CLASSIFIERS++;
             classifier.add(cl);
         }
     }
 
     public void deletePopulation() {
-        if(Classifier.NUM_CONDITIONS < 60)
+        if(Classifier.NUM_CLASSIFIERS < 60)
             return;
 
         double votesum = 0;
-        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+        for(int i=0;i<Classifier.NUM_CLASSIFIERS;i++){
             votesum += deletionVote(classifier.get(i));
         }
 
         Random rn = new Random();
         double choicepoint = rn.nextDouble() * votesum;
         votesum = 0;
-        for(int i=0;i<Classifier.NUM_CONDITIONS;i++){
+        for(int i=0;i<Classifier.NUM_CLASSIFIERS;i++){
             votesum += deletionVote(classifier.get(i));
             if((int)votesum >= (int)choicepoint) {
-                if (Classifier.NUM_CONDITIONS > 1) {
-                    Classifier.NUM_CONDITIONS--;
+                if (Classifier.NUM_CLASSIFIERS > 1) {
+                    Classifier.NUM_CLASSIFIERS--;
                 } else {
                     classifier.remove(i);
                 }
@@ -360,15 +364,15 @@ public class VultureClassifier {
     }
 
     public double deletionVote(Classifier cl){
-        double vote = Classifier.NUM_ACTIONS * Classifier.NUM_CONDITIONS;
+        double vote = Classifier.NUM_ACTIONS * Classifier.NUM_CLASSIFIERS;
         int fitnesssum = 0;
-        for(int i=0;i< Classifier.NUM_CONDITIONS;i++)
+        for(int i=0;i< Classifier.NUM_CLASSIFIERS;i++)
             fitnesssum += classifier.get(i).getFitness();
-        int averagefitness = fitnesssum / Classifier.NUM_CONDITIONS;
+        int averagefitness = fitnesssum / Classifier.NUM_CLASSIFIERS;
         /**
          * TODO: implement if statement
          */
-        if(cl.getCallCounter() >= 20 && ((int) 1000 * (cl.getFitness() / Classifier.NUM_CONDITIONS)) < ((int) 1000* (0.8 * averagefitness)))
+        if(cl.getCallCounter() >= 20 && ((int) 1000 * (cl.getFitness() / Classifier.NUM_CLASSIFIERS)) < ((int) 1000* (0.8 * averagefitness)))
             vote = vote * averagefitness / (cl.getFitness());
         return vote;
     }

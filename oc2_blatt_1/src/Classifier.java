@@ -17,7 +17,7 @@ public class Classifier {
     private double precision;
     private double error;
     private double fitness;
-    private int[] geneticArray = new int[NUM_CONDITIONS];
+    private int[] geneticArray = new int[30];
 
     private int hitpoints;
     private int enemyShieldpoints;
@@ -33,7 +33,7 @@ public class Classifier {
     private Unit unit;
     private Unit target;
 
-    public static int NUM_CONDITIONS = 30; //number of classifiers
+    public static int NUM_CLASSIFIERS = 30; //number of classifiers
     public static final int NUM_ACTIONS = 2; //number of actions
 
     private final double DISCOUNT_FACTOR = 0.71;
@@ -102,7 +102,7 @@ public class Classifier {
         }
     }
 
-    public void setCondition(int index, Unit unit, Unit target) {
+    public void setCondition(Unit unit, Unit target) {
 
 		// changes condition from last frame to false so that it can check
 		// condition for next frame
@@ -112,9 +112,6 @@ public class Classifier {
 		this.unit = unit;
 		this.target = target;
 
-		if (index > NUM_CONDITIONS) {
-			System.err.println("Error");
-		}
 		// sets condition true if environment matches
 
 		if (geneticArray[0] == 1) {
@@ -466,7 +463,7 @@ public class Classifier {
 	}
 
 	public static void setNumConditions(int conditions){
-		NUM_CONDITIONS = conditions;
+		NUM_CLASSIFIERS = conditions;
 	}
 	
 	public int getCallCounter(){
