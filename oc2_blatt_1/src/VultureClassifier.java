@@ -73,8 +73,16 @@ public class VultureClassifier {
             /**
              * TODO: uncomment if implementation complete
              */
-            runGeneticAlgorithm(actionset);
+            Random rn1 = new Random();
+            int numU = 1; //probability 0.001
+            double random = rn1.nextDouble() * 1000;
+            random = Math.round(random);
+            int numD = (int) random;
 
+            if ((numU - numD) > 0) {
+            	runGeneticAlgorithm(actionset);
+            }
+            
             //runs best action
             Classifier.selectAction(action, unit, target);
 
