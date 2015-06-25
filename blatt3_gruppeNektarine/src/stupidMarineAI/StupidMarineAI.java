@@ -22,10 +22,23 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
     private int frame;
     private int marineID = 0;
 
+    public final int COLUMN_WIDTH = 100;
+    public final int COLUMN_HEIGHT = 40;
+
+    ArrayList<Marine> column1;
+    ArrayList<Marine> column2;
+    ArrayList<Marine> row1;
+    ArrayList<Marine> row2;
+
     public StupidMarineAI() {
         System.out.println("This is the StupidMarineAI! :)");
 
         bwapi = new JNIBWAPI(this, false);
+
+        column1 = new ArrayList<>();
+        column2 = new ArrayList<>();
+        row1 = new ArrayList<>();
+        row2 = new ArrayList<>();
     }
 
     public static void main(String[] args) {
@@ -196,58 +209,57 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
         return new Position(sumX/marines.size(),sumY/marines.size());
     }
 
-    public ArrayList<ArrayList> span(){
-        ArrayList<ArrayList> list = new ArrayList<>();
-        ArrayList<Marine> column1 = new ArrayList<>();
-        ArrayList<Marine> column2 = new ArrayList<>();
-        ArrayList<Marine> row1 = new ArrayList<>();
-        ArrayList<Marine> row2 = new ArrayList<>();
+    public Position span(){
         for(Marine x: marines){
             //columns
             if(x.getX()<getCenter().getX()) {
-                if(x.getX() < getCenter().getX()+50 && x.getX() > getCenter().getX()-50
-                        && x.getY()<getCenter().getY()-0 && x.getY()>getCenter().getY()+40) {
+                if(x.getX() < getCenter().getX()+COLUMN_WIDTH/2 && x.getX() > getCenter().getX()-COLUMN_WIDTH/2
+                        && x.getY()<getCenter().getY()-0 && x.getY()>getCenter().getY()+COLUMN_HEIGHT) {
                     column1.add(x);
                 }
             }
             else {
-                if(x.getX() < getCenter().getX()+50 && x.getX() > getCenter().getX()-50
-                        && x.getY()<getCenter().getY()-40 && x.getY()>getCenter().getY()+0) {
+                if(x.getX() < getCenter().getX()+COLUMN_WIDTH/2 && x.getX() > getCenter().getX()-COLUMN_WIDTH/2
+                        && x.getY()<getCenter().getY()-COLUMN_HEIGHT && x.getY()>getCenter().getY()+0) {
                     column2.add(x);
                 }
             }
 
             //rows
             if(x.getX()<getCenter().getX()) {
-                if(x.getX() < getCenter().getX()+40 && x.getX() > getCenter().getX()-0
-                        && x.getY()<getCenter().getY()+50 && x.getY()>getCenter().getY()-50) {
+                if(x.getX() < getCenter().getX()+COLUMN_HEIGHT && x.getX() > getCenter().getX()-0
+                        && x.getY()<getCenter().getY()+COLUMN_WIDTH/2 && x.getY()>getCenter().getY()-COLUMN_WIDTH/2) {
                     row1.add(x);
                 }
             }
             else {
-                if(x.getX() < getCenter().getX()+0 && x.getX() > getCenter().getX()-40
-                        && x.getY()<getCenter().getY()+50 && x.getY()>getCenter().getY()-50) {
+                if(x.getX() < getCenter().getX()+0 && x.getX() > getCenter().getX()-COLUMN_HEIGHT
+                        && x.getY()<getCenter().getY()+COLUMN_WIDTH/2 && x.getY()>getCenter().getY()-COLUMN_WIDTH/2) {
                     row2.add(x);
                 }
             }
         }
-        ArrayList<Position> pos = new ArrayList<>();
-        pos.add(new Position(getCenter().getX(),getCenter().getY()));
-
-        list.add(column1); //0
-        list.add(column2); //1
-        list.add(row1); //2
-        list.add(row2); //3
-        list.add(pos); //4
-        return list;
+        return new Position(getCenter().getX(),getCenter().getY());
     }
 
-    public static Marine getNearestNeighbour(){
-        return ;
+    public HashSet<Marine> getMarines(){
+        return marines;
     }
 
-    public static Marine getSecNearestNeighbour(){
-        return;
+    public ArrayList<Marine> getColumn1List(){
+        return column1;
+    }
+
+    public ArrayList<Marine> getColumn2List(){
+        return column2;
+    }
+
+    public ArrayList<Marine> getRow1List(){
+        return row1;
+    }
+
+    public ArrayList<Marine> getRow2List(){
+        return row2;
     }
 }
 

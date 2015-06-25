@@ -1,6 +1,5 @@
 package stupidMarineAI;
 
-import javafx.geometry.Pos;
 import jnibwapi.JNIBWAPI;
 import jnibwapi.model.Unit;
 import jnibwapi.types.WeaponType;
@@ -19,10 +18,10 @@ public class Marine {
     private StupidMarineAI ai;
     private int id;
 
-    private ArrayList<Marine> column1 = new ArrayList<>();
-    private ArrayList<Marine> column2 = new ArrayList<>();
-    private ArrayList<Marine> row1 = new ArrayList<>();
-    private ArrayList<Marine> row2 = new ArrayList<>();
+    private ArrayList<Marine> column1;
+    private ArrayList<Marine> column2;
+    private ArrayList<Marine> row1;
+    private ArrayList<Marine> row2;
 
     public Marine(Unit unit, JNIBWAPI bwapi, HashSet<Unit> enemyUnits, int id) {
         this.unit = unit;
@@ -30,13 +29,18 @@ public class Marine {
         this.enemyUnits = enemyUnits;
         this.id = id;
 
+        column1 = new ArrayList<>();
+        column2 = new ArrayList<>();
+        row1 = new ArrayList<>();
+        row2 = new ArrayList<>();
+
     }
 
     public void step() {
         Unit target = getClosestEnemy();
 
         if (unit.getOrderID() != 10 && !unit.isAttackFrame() && !unit.isStartingAttack() && !unit.isAttacking() && target != null) {
-            if (bwapi.getWeaponType(WeaponType.WeaponTypes.Gauss_Rifle.getID()).getMaxRange() > getDistance(target) - 20.0) {
+            if (bwapi.getWeaponType(WeaponType.WeaponTypes.Gauss_Rifle.getID()).getMaxRange() > getDistance(target) - ai.COLUMN_HEIGHT/2.0) {
                 bwapi.attack(unit.getID(), target.getID());
             } else {
                 move(target);
@@ -112,39 +116,39 @@ public class Marine {
 
     public Position rule3(boolean row, boolean column, StupidMarineAI ai) {
         this.ai = ai;
-        ArrayList<ArrayList> list = ai.span();
-        column1 = list.get(0);
-        column2 = list.get(1);
-        row1 = list.get(2);
-        row2 = list.get(3);
-        Position center = (Position) list.get(4).get(0);
+        column1 = ai.getColumn1List();
+        column2 = ai.getColumn2List();
+        row1 = ai.getRow1List();
+        row2 = ai.getRow2List();
+        Position center = ai.span();
+        //TODO: Double Werte können nicht mit '<', '>' verglichen werden
         double num1 = 0.0;
         double num2 = 0.0;
         if (column == true) {
-            int x = unit.getX() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getX();
-            int y = unit.getY() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getY();
+            int x = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
+            int y = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
             num1 = column1.size() / Math.sqrt(Math.pow(x, 2) - Math.pow(y, 2));
 
-            int x2 = unit.getX() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getX();
-            int y2 = unit.getY() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getY();
+            int x2 = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
+            int y2 = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
             num2 = column2.size() / Math.sqrt(Math.pow(x2, 2) - Math.pow(y2, 2));
             if (num1 > num2) {
-                return new Position(center.getX(), center.getY() + 20);
+                return new Position(center.getX(), center.getY() + ai.COLUMN_HEIGHT/2);
             } else {
-                return new Position(center.getX(), center.getY() - 20);
+                return new Position(center.getX(), center.getY() - ai.COLUMN_HEIGHT/2);
             }
         } else if (row == true) {
-            int x = unit.getX() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getX();
-            int y = unit.getY() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getY();
+            int x = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
+            int y = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
             num1 = row1.size() / Math.sqrt(Math.pow(x, 2) - Math.pow(y, 2));
 
-            int x2 = unit.getX() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getX();
-            int y2 = unit.getY() + getCohesion(StupidMarineAI.getNearestNeighbour(), StupidMarineAI.getSecNearestNeighbour()).getY();
+            int x2 = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
+            int y2 = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
             num2 = row2.size() / Math.sqrt(Math.pow(x2, 2) - Math.pow(y2, 2));
             if (num1 > num2) {
-                return new Position(center.getX() - 20, center.getY());
+                return new Position(center.getX() - ai.COLUMN_HEIGHT/2, center.getY());
             } else {
-                return new Position(center.getX() + 20, center.getY());
+                return new Position(center.getX() + ai.COLUMN_HEIGHT/2, center.getY());
 
             }
         }
@@ -152,5 +156,35 @@ public class Marine {
                 System.err.println("Error!");
                 return new Position(center.getX(),center.getY());
         }
+    }
+
+    public Marine getNearestNeighbour(StupidMarineAI ai){
+        Marine result = null;
+        double minDistance = Double.POSITIVE_INFINITY;
+        for(Marine marine: ai.getMarines()){
+            double distance = getDistance(marine.getUnit());
+            if (distance < minDistance && marine!= this) {
+                minDistance = distance;
+                result = marine;
+            }
+        }
+        return result;
+    }
+
+    public Marine getSecondNearestNeighbour(StupidMarineAI ai){
+        Marine result = null;
+        double minDistance = Double.POSITIVE_INFINITY;
+        for(Marine marine: ai.getMarines()){
+            double distance = getDistance(marine.getUnit());
+            if (distance < minDistance && marine!= this && marine!=getNearestNeighbour(ai)) {
+                minDistance = distance;
+                result = marine;
+            }
+        }
+        return result;
+    }
+
+    public Unit getUnit(){
+        return unit;
     }
 }
