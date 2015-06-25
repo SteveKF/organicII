@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="JNIBWAPI">
+    <archive path="C:/BWAPI/oc2_blatt_1/JNIBWAPI.jar" />
+  </library>
+</eclipse-userlibraries>
+
