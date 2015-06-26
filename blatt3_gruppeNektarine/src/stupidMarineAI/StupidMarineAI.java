@@ -7,6 +7,7 @@ import jnibwapi.types.UnitType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 
 /**
  * Created by Stefan Rudolph on 17.02.14.
@@ -23,7 +24,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
     private int marineID = 0;
 
     public final int COLUMN_WIDTH = 100;
-    public final int COLUMN_HEIGHT = 40;
+    public final int COLUMN_HEIGHT = -40;
 
     ArrayList<Marine> column1;
     ArrayList<Marine> column2;
@@ -59,9 +60,20 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchFrame() {
-
+            for (Marine x : marines) {
+                if(marines.size()>=3 && enemyUnits.size()!=0 && marines!=null) {
+                    if (x.getNearestNeighbour(this).getDistance(x.getUnit()) < 10) {
+                        x.setFitness(x.getFitness() + 10);
+                    }
+                    if (x.getDistance(x.getClosestEnemy()) < x.getPreviousDistance()) {
+                        x.setFitness(x.getFitness() + 10);
+                    }
+                    x.setPreviousDistance((int) (x.getDistance(x.getClosestEnemy())));
+                }
+            }
+        applyCrossover();
         for (Marine m : marines) {
-            m.step();
+            m.step(this);
         }
 
         if (frame % 1000 == 0) {
@@ -117,6 +129,10 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchEnd(boolean winner) {
+        for(Marine x: marines) {
+            System.out.printf("Weight1: %s, Weight2: %s, Weight3: %s, Weight4: %s\n",x.getWeight1(),
+                    x.getWeight2(),x.getWeight3(),x.getWeight4());
+        }
     }
 
     @Override
@@ -215,13 +231,21 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
             if(x.getX()<getCenter().getX()) {
                 if(x.getX() < getCenter().getX()+COLUMN_WIDTH/2 && x.getX() > getCenter().getX()-COLUMN_WIDTH/2
                         && x.getY()<getCenter().getY()-0 && x.getY()>getCenter().getY()+COLUMN_HEIGHT) {
-                    column1.add(x);
+                    if(column1.size()<(marines.size()/2)) {
+                        column1.add(x);
+                    }else{
+                        column2.add(x);
+                    }
                 }
             }
             else {
                 if(x.getX() < getCenter().getX()+COLUMN_WIDTH/2 && x.getX() > getCenter().getX()-COLUMN_WIDTH/2
                         && x.getY()<getCenter().getY()-COLUMN_HEIGHT && x.getY()>getCenter().getY()+0) {
-                    column2.add(x);
+                    if(column2.size()<(marines.size()/2)) {
+                        column2.add(x);
+                    }else{
+                        column1.add(x);
+                    }
                 }
             }
 
@@ -229,17 +253,85 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
             if(x.getX()<getCenter().getX()) {
                 if(x.getX() < getCenter().getX()+COLUMN_HEIGHT && x.getX() > getCenter().getX()-0
                         && x.getY()<getCenter().getY()+COLUMN_WIDTH/2 && x.getY()>getCenter().getY()-COLUMN_WIDTH/2) {
-                    row1.add(x);
+                    if(row1.size()<(marines.size()/2)) {
+                        row1.add(x);
+                    }else{
+                        row2.add(x);
+                    }
                 }
             }
             else {
                 if(x.getX() < getCenter().getX()+0 && x.getX() > getCenter().getX()-COLUMN_HEIGHT
                         && x.getY()<getCenter().getY()+COLUMN_WIDTH/2 && x.getY()>getCenter().getY()-COLUMN_WIDTH/2) {
-                    row2.add(x);
+                    if(row2.size()<(marines.size()/2)) {
+                        row2.add(x);
+                    }else{
+                        row1.add(x);
+                    }
                 }
             }
         }
         return new Position(getCenter().getX(),getCenter().getY());
+    }
+
+    public Marine selectOffspring(){
+        int fitnesssum = 0;
+        for(Marine x: marines){
+            fitnesssum += x.getFitness();
+        }
+
+        Random rn = new Random();
+        double choicepoint = rn.nextDouble() * fitnesssum;
+        fitnesssum = 0;
+
+        for(Marine x: marines){
+            fitnesssum = fitnesssum + x.getFitness();
+            if(fitnesssum >= choicepoint){
+                return x;
+            }
+        }
+        return null;
+    }
+
+    //TODO: implement prob to run crossover
+    public void applyCrossover(){
+        Marine parent1 = selectOffspring();
+        Marine parent2 = selectOffspring();
+        if(parent1==null || parent2==null){
+            System.err.println("Error2!\n");
+        }
+        Marine child = null;
+        int tmp = Integer.MAX_VALUE;
+        for(Marine x: marines){
+            if(x.getFitness()<=tmp){
+                child = x;
+                tmp = x.getFitness();
+            }
+            System.out.printf("Fitness: %s, Tmp: %s\n", x.getFitness(), tmp);
+        }
+        if(child!=null) {
+            Random rn = new Random();
+            double prob = rn.nextDouble();
+            child.setWeight1(parent1.getWeight1() * prob + parent2.getWeight1()* (1-prob));
+            child.setWeight2(parent1.getWeight2() * prob + parent2.getWeight2() * (1 - prob));
+            child.setWeight3(parent1.getWeight3() * prob + parent2.getWeight3() * (1 - prob));
+            child.setWeight4(parent1.getWeight4() * prob + parent2.getWeight4() * (1 - prob));
+        }
+
+        Random rn = new Random();
+
+        int num1 = 500; //probability 0.05
+        double random = rn.nextDouble() * 1000;
+        random = Math.round(random);
+        int num2 = (int) random;
+
+        if ((num1 - num2) > 0) {
+                System.out.println("Hallo1!");
+                child.setWeight1(child.getWeight1()*rn.nextDouble());
+                child.setWeight2(child.getWeight2() * rn.nextDouble());
+                child.setWeight3(child.getWeight3() * rn.nextDouble());
+                child.setWeight4(child.getWeight4() * rn.nextDouble());
+        }
     }
 
     public HashSet<Marine> getMarines(){
@@ -261,6 +353,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
     public ArrayList<Marine> getRow2List(){
         return row2;
     }
+
 }
 
 
