@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="JNIBWAPI">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/JNIBWAPI.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
