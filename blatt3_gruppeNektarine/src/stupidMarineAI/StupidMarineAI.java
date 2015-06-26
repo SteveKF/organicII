@@ -63,11 +63,14 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
             for (Marine x : marines) {
                 if(marines.size()>=3 && enemyUnits.size()!=0 && marines!=null) {
                     if (x.getNearestNeighbour(this).getDistance(x.getUnit()) < 10) {
+                    	// gets rewarded if it is close to its neighbour
                         x.setFitness(x.getFitness() + 10);
                     }
                     if (x.getDistance(x.getClosestEnemy()) < x.getPreviousDistance()) {
+                    	// gets rewarded if it's coming closer to the enemy
                         x.setFitness(x.getFitness() + 10);
                     }
+                    // temp variable for calculation of reward, see above
                     x.setPreviousDistance((int) (x.getDistance(x.getClosestEnemy())));
                 }
             }
@@ -226,6 +229,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
     }
 
     public Position span(){
+    	// spans the marines in columns and rows for rules 3 and 4
         for(Marine x: marines){
             //columns
             if(x.getX()<getCenter().getX()) {
@@ -275,6 +279,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
     }
 
     public Marine selectOffspring(){
+    	// select offspring for genetic algorithm
         int fitnesssum = 0;
         for(Marine x: marines){
             fitnesssum += x.getFitness();
@@ -283,7 +288,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
         Random rn = new Random();
         double choicepoint = rn.nextDouble() * fitnesssum;
         fitnesssum = 0;
-
+        // probability of being chosen according to fitness ("roulette wheel")
         for(Marine x: marines){
             fitnesssum = fitnesssum + x.getFitness();
             if(fitnesssum >= choicepoint){
@@ -295,6 +300,7 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
 
     //TODO: implement prob to run crossover
     public void applyCrossover(){
+    	//select parents (probability correlates with fitness)
         Marine parent1 = selectOffspring();
         Marine parent2 = selectOffspring();
         if(parent1==null || parent2==null){
@@ -303,12 +309,14 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
         Marine child = null;
         int tmp = Integer.MAX_VALUE;
         for(Marine x: marines){
+        	// child is the one with the lowest fitness
             if(x.getFitness()<=tmp){
                 child = x;
                 tmp = x.getFitness();
             }
             System.out.printf("Fitness: %s, Tmp: %s\n", x.getFitness(), tmp);
         }
+        // CROSSOVER - weights of children for each rule are a weighted average of weights of parents
         if(child!=null) {
             Random rn = new Random();
             double prob = rn.nextDouble();
@@ -324,7 +332,8 @@ public class StupidMarineAI implements BWAPIEventListener, Runnable {
         double random = rn.nextDouble() * 1000;
         random = Math.round(random);
         int num2 = (int) random;
-
+        
+        // MUTATION - random chance to decrease the weights for each rules by a random factor
         if ((num1 - num2) > 0) {
                 System.out.println("Hallo1!");
                 child.setWeight1(child.getWeight1()*rn.nextDouble());

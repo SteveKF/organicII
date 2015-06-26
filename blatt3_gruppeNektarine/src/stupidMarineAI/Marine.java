@@ -58,7 +58,7 @@ public class Marine {
     }
 
     private void move(Unit target) {
-        //TODO: Implement the flocking behavior in this method.
+        // weighted sum of x position plus the x resulting from the different rule vectors is the new x position to go to, analog for y
         double x = rule1().getX()*weight1 + rule2().getX()+weight2 + rule3(false,true,ai).getX()*weight3
                 + rule3(true,false,ai).getX()*weight4;
         double y = rule1().getY()*weight1 + rule2().getY()*weight2 +rule3(false,true,ai).getY()*weight3
@@ -103,6 +103,8 @@ public class Marine {
 
 
     public Position getCohesion(Marine neighbour1, Marine neighbour2) {
+    	// returns a Position vector with the new x and y
+    	// vector is the average position of the 2 given neighbours
         int sumX = neighbour1.getX() + neighbour2.getX();
         int sumY = neighbour1.getY() + neighbour2.getY();
 
@@ -113,6 +115,7 @@ public class Marine {
     }
 
     public Position rule1() {
+    	// implements rule 1 (COHESION), resulting vector points to position of closest enemy
         Unit target = getClosestEnemy();
 
 
@@ -123,6 +126,7 @@ public class Marine {
     }
 
     public Position rule2(){
+    	// implements rule2 (SEPARATION), resulting vector points away from nearest neighbours
         Marine neighbour1 = getNearestNeighbour(ai);
         Marine neighbour2 = getSecondNearestNeighbour(ai);
 
@@ -133,6 +137,8 @@ public class Marine {
     }
 
     public Position rule3(boolean row, boolean column, StupidMarineAI ai) {
+    	// depending on the booleans, either moves towards centroid of a row or a column
+    	// i.e. rule3 and rule4
         this.ai = ai;
         column1 = ai.getColumn1List();
         column2 = ai.getColumn2List();
@@ -144,10 +150,12 @@ public class Marine {
         if (column == true) {
             int x = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
             int y = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
+            // find the column with the highest ...
             num1 = column1.size() / Math.sqrt(Math.pow(x, 2) - Math.pow(y, 2));
 
             int x2 = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
             int y2 = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
+            // find the column with the highest ...
             num2 = column2.size() / Math.sqrt(Math.pow(x2, 2) - Math.pow(y2, 2));
 
             num1 = Math.round(num1*1000);
@@ -160,10 +168,12 @@ public class Marine {
         } else if (row == true) {
             int x = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
             int y = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
+            // find the row with the highest ...
             num1 = row1.size() / Math.sqrt(Math.pow(x, 2) - Math.pow(y, 2));
 
             int x2 = unit.getX() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getX();
             int y2 = unit.getY() + getCohesion(getNearestNeighbour(ai), getSecondNearestNeighbour(ai)).getY();
+            // find the row with the highest ...
             num2 = row2.size() / Math.sqrt(Math.pow(x2, 2) - Math.pow(y2, 2));
 
             num1 = Math.round(num1*1000);
@@ -175,7 +185,7 @@ public class Marine {
 
             }
         }
-        else{
+        else{ // error if both, row and column are set to false
                 System.err.println("Error!");
                 return new Position(center.getX(),center.getY());
         }
