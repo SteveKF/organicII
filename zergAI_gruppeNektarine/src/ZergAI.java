@@ -5,31 +5,34 @@ import jnibwapi.JNIBWAPI;
 import jnibwapi.model.Unit;
 import jnibwapi.types.UnitType;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 
 
 public class ZergAI implements BWAPIEventListener, Runnable {
 
     private final JNIBWAPI bwapi;
 
-    private HashSet<Unit> queens;
-    private HashSet<Unit> scourges;
-    private HashSet<Unit> ultralisks;
-    private HashSet<Unit> hydralisks;
-    private HashSet<Unit> zerglings;
+
     private HashSet<Unit> enemyUnits;
 
-    private HashSet<Unit> units;
+    public final int COLUMN_WIDTH = 40;
+    public final int COLUMN_HEIGHT = 100;
+    public final int ROW_WIDTH = 100;
+    public final int ROW_HEIGHT = 40;
+
+    ArrayList<Zerg> column1;
+    ArrayList<Zerg> column2;
+    ArrayList<Zerg> row1;
+    ArrayList<Zerg> row2;
+
+    private HashSet<Zerg> zergs;
 
     private int frame;
-    private int queenID = 0;
-    private int scourgeID = 0;
-    private int ultraliskID = 0;
-    private int hydraliskID = 0;
-    private int zerglingID = 0;
+    private int zergID = 0;
 
     public ZergAI() {
-        System.out.println("This is the StupidMarineAI! :)");
 
         bwapi = new JNIBWAPI(this, false);
     }
@@ -40,49 +43,26 @@ public class ZergAI implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchStart() {
-        queens = new HashSet<>();
-        scourges = new HashSet<>();
-        ultralisks = new HashSet<>();
-        hydralisks = new HashSet<>();
-        zerglings = new HashSet<>();
         enemyUnits = new HashSet<>();
+        zergs = new HashSet<>();
+        column1 = new ArrayList<>();
+        column2 = new ArrayList<>();
+        row1 = new ArrayList<>();
+        row2 = new ArrayList<>();
 
         frame = 0;
+        zergID = 0;
 
         bwapi.enablePerfectInformation();
         bwapi.enableUserInput();
         bwapi.setGameSpeed(0);
-
-        System.out.println("Queen Size"+queens.size());
-        System.out.println("Scourge Size" + scourges.size());
-        System.out.println("Ultralisk Size" + ultralisks.size());
-        System.out.println("Hydralisk Size" + hydralisks.size());
-        System.out.println("Zergling Size" + zerglings.size());
     }
 
     @Override
     public void matchFrame() {
 
-        /*for (Marine m : marines) {
-            m.step();
-        }*/
-
-         Unit target = getClosestEnemy(queens.iterator().next());
-
-        for(Unit x: queens){
-            bwapi.move(x.getID(),target.getX(),target.getY());
-        }
-        for(Unit x: scourges){
-            bwapi.move(x.getID(),target.getX(),target.getY());
-        }
-        for(Unit x: ultralisks){
-            bwapi.move(x.getID(),target.getX(),target.getY());
-        }
-        for(Unit x: hydralisks){
-            bwapi.move(x.getID(),target.getX(),target.getY());
-        }
-        for(Unit x: zerglings){
-            bwapi.move(x.getID(),target.getX(),target.getY());
+        for (Zerg m : zergs) {
+            m.step(this);
         }
 
         if (frame % 1000 == 0) {
@@ -92,98 +72,74 @@ public class ZergAI implements BWAPIEventListener, Runnable {
     }
 
     @Override
-    public void unitDiscover(int unitID) {
-        Unit unit = bwapi.getUnit(unitID);
-        int typeID = unit.getTypeID();
+    public void unitDiscover(int unitID){
+        try {
+            Unit unit = bwapi.getUnit(unitID);
+            int typeID = unit.getTypeID();
+            if(typeID == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    zergID++;
+                } else {
+                    enemyUnits.add(unit);
+                }
+            }
 
-        if (typeID == UnitType.UnitTypes.Zerg_Queen.getID()) {
-            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                queens.add(unit);
-                queenID++;
-            } else {
-                enemyUnits.add(unit);
+            if(typeID == UnitType.UnitTypes.Zerg_Queen.getID()){
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                }else {
+                    enemyUnits.add(unit);
+                }
             }
-        } else if (typeID == UnitType.UnitTypes.Zerg_Scourge.getID()) {
-            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                scourges.add(unit);
-                scourgeID++;
-            } else {
-                enemyUnits.add(unit);
+
+            if(typeID == UnitType.UnitTypes.Zerg_Hydralisk.getID()){
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                }else {
+                    enemyUnits.add(unit);
+                }
             }
-        } else if (typeID == UnitType.UnitTypes.Zerg_Ultralisk.getID()) {
-            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                ultralisks.add(unit);
-                ultraliskID++;
-            } else {
-                enemyUnits.add(unit);
+
+            if(typeID == UnitType.UnitTypes.Zerg_Ultralisk.getID()){
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                }else {
+                    enemyUnits.add(unit);
+                }
             }
-        } else if (typeID == UnitType.UnitTypes.Zerg_Hydralisk.getID()) {
-            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                hydralisks.add(unit);
-                hydraliskID++;
-            } else {
-                enemyUnits.add(unit);
+
+            if(typeID == UnitType.UnitTypes.Zerg_Scourge.getID()){
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                }else {
+                    enemyUnits.add(unit);
+                }
             }
-        } else if (typeID == UnitType.UnitTypes.Zerg_Zergling.getID()) {
-            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                zerglings.add(unit);
-                zerglingID++;
-            } else {
-                enemyUnits.add(unit);
-            }
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 
     @Override
     public void unitDestroy(int unitID) {
-        Unit rmQueen = null;
-        for (Unit queen : queens) {
-            if (queen.getID() == unitID) {
-                rmQueen = queen;
-                break;
-            }
-        }
-        queens.remove(rmQueen);
 
-        Unit rmScourge = null;
-        for (Unit scourge : scourges) {
-            if (scourge.getID() == unitID) {
-                rmScourge = scourge;
+        Zerg rm = null;
+        for(Zerg zerg: zergs){
+            if(zerg.getID() == unitID){
+                rm = zerg;
                 break;
             }
         }
-        scourges.remove(rmScourge);
-
-        Unit rmUltralisk = null;
-        for (Unit ultralisk : ultralisks) {
-            if (ultralisk.getID() == unitID) {
-                rmUltralisk = ultralisk;
-                break;
-            }
-        }
-        ultralisks.remove(rmUltralisk);
-
-        Unit rmHydralisk = null;
-        for (Unit hydralisk : hydralisks) {
-            if (hydralisk.getID() == unitID) {
-                rmHydralisk = hydralisk;
-                break;
-            }
-        }
-        hydralisks.remove(rmHydralisk);
-
-        Unit rmZergling = null;
-        for (Unit zergling : zerglings) {
-            if (zergling.getID() == unitID) {
-                rmZergling = zergling;
-                break;
-            }
-        }
-        zerglings.remove(rmZergling);
+        zergs.remove(rm);
 
         Unit rmUnit = null;
-        for (Unit u : enemyUnits) {
-            if (u.getID() == unitID) {
+        for(Unit u:enemyUnits){
+            if(u.getID()==unitID){
                 rmUnit = u;
                 break;
             }
@@ -198,12 +154,9 @@ public class ZergAI implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchEnd(boolean winner) {
-        System.out.println("Queen Size"+queens.size());
-        System.out.println("Scourge Size" + scourges.size());
-        System.out.println("Ultralisk Size" + ultralisks.size());
-        System.out.println("Hydralisk Size" + hydralisks.size());
-        System.out.println("Zergling Size" + zerglings.size());
-    }
+        System.out.println(zergs.size());
+        System.out.println(enemyUnits.size());
+}
 
     @Override
     public void keyPressed(int keyCode) {
@@ -284,34 +237,148 @@ public class ZergAI implements BWAPIEventListener, Runnable {
         bwapi.start();
     }
 
-    private Unit getClosestEnemy(Unit unit) {
-        Unit result = null;
-        double minDistance = Double.POSITIVE_INFINITY;
-        for (Unit enemy : enemyUnits) {
-            double distance = getDistance(enemy,unit);
-            if (distance < minDistance) {
-                minDistance = distance;
-                result = enemy;
-            }
+
+    public Position getCenter() {
+        int sumX = 0;
+        int sumY = 0;
+        for (Zerg x : zergs) {
+            sumX += x.getX();
+            sumY += x.getY();
         }
 
-        return result;
+        return new Position(sumX / zergs.size(), sumY / zergs.size());
     }
 
-    private double getDistance(Unit enemy, Unit unit) {
-        int myX = unit.getX();
-        int myY = unit.getY();
+    //spans rows and columns from center of all units and computes how many are in these columns/rows
+    public Position span() {
+        Position center = getCenter();
+        column1.clear();
+        column2.clear();
+        row1.clear();
+        row2.clear();
+        for (Zerg x : zergs) {
+            //column1
+            if (x.getX() <= getCenter().getX() && x.getX() >= center.getX() - COLUMN_WIDTH && x.getY() >= center.getY() - COLUMN_HEIGHT / 2
+                    && x.getY() <= center.getY() + COLUMN_HEIGHT / 2) {
+                column1.add(x);
+            }
+            //column2
+            if (x.getX() >= center.getX() && x.getX() <= center.getX() + COLUMN_WIDTH && x.getY() >= center.getY() - COLUMN_HEIGHT / 2
+                    && x.getY() <= center.getY() + COLUMN_HEIGHT / 2) {
+                column2.add(x);
+            }
 
-        int enemyX = enemy.getX();
-        int enemyY = enemy.getY();
+            //row1
+            if (x.getX() <= center.getX() + ROW_WIDTH / 2 && x.getX() >= center.getX() - ROW_WIDTH / 2 && x.getY() >= center.getY() - ROW_HEIGHT
+                    && x.getY() <= center.getY()) {
+                row1.add(x);
+            }
+            //row2
+            if (x.getX() <= center.getX() + ROW_WIDTH / 2 && x.getX() >= center.getX() - ROW_WIDTH / 2 && x.getY() <= center.getY() + ROW_HEIGHT
+                    && x.getY() >= center.getY()) {
+                row2.add(x);
+            }
 
-        int diffX = myX - enemyX;
-        int diffY = myY - enemyY;
-
-        double result = Math.pow(diffX, 2) + Math.pow(diffY, 2);
-
-        return Math.sqrt(result);
+        }
+        return center;
     }
+
+    //select one parents with high fitness
+    public Zerg selectOffspring() {
+        int fitnesssum = 0;
+        for (Zerg x : zergs) {
+            fitnesssum += x.getFitness();
+        }
+
+        Random rn = new Random();
+        double choicepoint = rn.nextDouble() * fitnesssum;
+        fitnesssum = 0;
+
+        for (Zerg x : zergs) {
+            fitnesssum = fitnesssum + x.getFitness();
+            if (fitnesssum >= choicepoint) {
+                return x;
+            }
+        }
+        return null;
+    }
+
+    //genetic algorithm
+    public void runGeneticAlgorithm() {
+        Zerg parent1 = selectOffspring();
+        Zerg parent2 = selectOffspring();
+        if (parent1 == null || parent2 == null) {
+            return;
+        }
+        Zerg child = null;
+        int tmp = Integer.MAX_VALUE;
+        //lowest (fitness) tuple of weights is chosen as child so that it will improve
+        for (Zerg x : zergs) {
+            if (x.getFitness() < tmp) {
+                child = x;
+                tmp = x.getFitness();
+            }
+        }
+        //applyCrossover child gets weights from each parent with a specific proportion
+        if (child != null) {
+            Random rn = new Random();
+            double prob = rn.nextDouble();
+            child.setWeight1(parent1.getWeight1() * prob + parent2.getWeight1() * (1 - prob));
+            child.setWeight2(parent1.getWeight2() * prob + parent2.getWeight2() * (1 - prob));
+            child.setWeight3(parent1.getWeight3() * prob + parent2.getWeight3() * (1 - prob));
+            child.setWeight4(parent1.getWeight4() * prob + parent2.getWeight4() * (1 - prob));
+        }else{
+            return;
+        }
+
+        Random rn = new Random();
+        //for each weight run mutation with a prob of 0.1
+        for (int i = 1; i < 5; i++) {
+            int num1 = 100; //probability 0.1
+            double random = rn.nextDouble() * 1000;
+            random = Math.round(random);
+            int num2 = (int) random;
+
+            if ((num1 - num2) > 0) {
+                //mutates Weight between 0 and 1
+                switch (i) {
+                    case 1:
+                        child.setWeight1(rn.nextDouble());
+                        break;
+                    case 2:
+                        child.setWeight2(rn.nextDouble());
+                        break;
+                    case 3:
+                        child.setWeight3(rn.nextDouble());
+                        break;
+                    case 4:
+                        child.setWeight4(rn.nextDouble());
+                        break;
+                }
+            }
+        }
+    }
+
+    public HashSet<Zerg> getMarines() {
+        return zergs;
+    }
+
+    public ArrayList<Zerg> getColumn1List() {
+        return column1;
+    }
+
+    public ArrayList<Zerg> getColumn2List() {
+        return column2;
+    }
+
+    public ArrayList<Zerg> getRow1List() {
+        return row1;
+    }
+
+    public ArrayList<Zerg> getRow2List() {
+        return row2;
+    }
+
 }
 
 
