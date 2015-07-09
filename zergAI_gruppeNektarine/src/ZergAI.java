@@ -1,10 +1,17 @@
-
-
+import com.sun.org.apache.xpath.internal.SourceTree;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import jnibwapi.BWAPIEventListener;
 import jnibwapi.JNIBWAPI;
 import jnibwapi.model.Unit;
+import jnibwapi.types.TechType;
 import jnibwapi.types.UnitType;
+import jnibwapi.types.WeaponType;
 
+import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -14,27 +21,29 @@ public class ZergAI implements BWAPIEventListener, Runnable {
 
     private final JNIBWAPI bwapi;
 
-
     private HashSet<Unit> enemyUnits;
 
-    public final int COLUMN_WIDTH = 40;
-    public final int COLUMN_HEIGHT = 100;
-    public final int ROW_WIDTH = 100;
-    public final int ROW_HEIGHT = 40;
+    public final int COLUMN_WIDTH = 100;
+    public final int COLUMN_HEIGHT = 300;
+    public final int ROW_WIDTH = 300;
+    public final int ROW_HEIGHT = 100;
 
     ArrayList<Zerg> column1;
     ArrayList<Zerg> column2;
     ArrayList<Zerg> row1;
     ArrayList<Zerg> row2;
 
-    private HashSet<Zerg> zergs;
+    private ArrayList<Zerg> zergs;
+    private ArrayList<Unit> zergs2;
+    private XCS xcs;
 
     private int frame;
-    private int zergID = 0;
+    private int zergID;
 
     public ZergAI() {
 
         bwapi = new JNIBWAPI(this, false);
+
     }
 
     public static void main(String[] args) {
@@ -44,16 +53,33 @@ public class ZergAI implements BWAPIEventListener, Runnable {
     @Override
     public void matchStart() {
         enemyUnits = new HashSet<>();
-        zergs = new HashSet<>();
+        zergs = new ArrayList<>();
         column1 = new ArrayList<>();
         column2 = new ArrayList<>();
         row1 = new ArrayList<>();
         row2 = new ArrayList<>();
+        zergs2 = new ArrayList<>();
+
+        if (bwapi.getSelf().getColor() == 111) {
+            Zerg.hatcheryX1 = 3520;
+            Zerg.hatcheryY1 = 368;
+            Zerg.hatcheryX2 = 3520;
+            Zerg.hatcheryY2 = 2704;
+        } else if (bwapi.getSelf().getColor() == 165) {
+            Zerg.hatcheryX1 = 576;
+            Zerg.hatcheryY1 = 368;
+            Zerg.hatcheryX2 = 576;
+            Zerg.hatcheryY2 = 2704;
+        }
+
+
+        Zerg.destroyed = false;
+        Zerg.destroyed2 = false;
 
         frame = 0;
         zergID = 0;
 
-        bwapi.enablePerfectInformation();
+        //bwapi.enablePerfectInformation();
         bwapi.enableUserInput();
         bwapi.setGameSpeed(0);
     }
@@ -61,9 +87,58 @@ public class ZergAI implements BWAPIEventListener, Runnable {
     @Override
     public void matchFrame() {
 
-        for (Zerg m : zergs) {
-            m.step(this);
+        if(zergs.size()>=5) {
+
+
+            //add positive fitness if formation is good and unit moves towards enemy else add negative fitness
+            for (Zerg x : zergs) {
+                for (Zerg y : zergs) {
+                    if (x.getDistance(y.getUnit()) <= 30 && x.getDistance(y.getUnit()) <= 10) {
+                        x.setFitness(x.getFitness() + 1);
+                    } else {
+                        x.setFitness(x.getFitness() - 1);
+                    }
+                }
+                if(x.getClosestEnemy()!=null) {
+                    if (x.getDistance(x.getClosestEnemy()) < x.getPreviousDistance()) {
+                        x.setFitness(x.getFitness() + 1);
+                    } else {
+                        x.setFitness(x.getFitness() - 1);
+                        x.setPreviousDistance((int) (x.getDistance(x.getClosestEnemy())));
+                    }
+                }
+            }
+            Random rn = new Random();
+
+            //runs genetic algorithm with prob of 0.35
+            int num1 = 1000; //probability 0.35
+            double random = rn.nextDouble() * 1000;
+            random = Math.round(random);
+            int num2 = (int) random;
+
+            if ((num1 - num2) > 0) {
+                runGeneticAlgorithm();
+            }
         }
+
+
+        Unit target = getClosestEnemy();
+
+
+        for (int i = 0; i < zergs.size(); i++) {
+            if (zergs.get(i).getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Queen.getID()) {
+                this.xcs = zergs.get(i).getXCS();
+            }
+            zergs.get(i).step(this, target, enemyUnits, zergs);
+        }
+
+        for(int i=0;i<zergs2.size();i++){
+            if(target != null && target.getX()==3520 && target.getY()==2704){
+                bwapi.attack(zergs2.get(i).getID(),target.getID());
+            }else
+                bwapi.move(zergs2.get(i).getID(),3520,2704);
+        }
+
 
         if (frame % 1000 == 0) {
             System.out.println("Frame: " + frame);
@@ -71,12 +146,61 @@ public class ZergAI implements BWAPIEventListener, Runnable {
         frame++;
     }
 
+    public double getDistance(Unit enemy, Unit unit) {
+        int myX = unit.getX();
+        int myY = unit.getY();
+        int enemyX;
+        int enemyY;
+
+        enemyX = enemy.getX();
+        enemyY = enemy.getY();
+
+        int diffX = myX - enemyX;
+        int diffY = myY - enemyY;
+
+        double result = Math.pow(diffX, 2) + Math.pow(diffY, 2);
+
+        return Math.sqrt(result);
+    }
+
     @Override
-    public void unitDiscover(int unitID){
+    public void unitDiscover(int unitID) {
+
+        Unit unit = bwapi.getUnit(unitID);
+        int typeID = unit.getTypeID();
         try {
-            Unit unit = bwapi.getUnit(unitID);
-            int typeID = unit.getTypeID();
-            if(typeID == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+            if (typeID == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    if (frame < 10) {
+                        zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                        zergID++;
+                    } else {
+                        zergs2.add(unit);
+                    }
+                } else {
+                    enemyUnits.add(unit);
+                }
+            }
+
+            if (typeID == UnitType.UnitTypes.Zerg_Queen.getID()) {
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                } else {
+                    enemyUnits.add(unit);
+                }
+            }
+
+            if (typeID == UnitType.UnitTypes.Zerg_Hydralisk.getID()) {
+                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                    zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    //zergID++;
+                } else {
+                    enemyUnits.add(unit);
+                }
+            }
+
+            if (typeID == UnitType.UnitTypes.Zerg_Ultralisk.getID()) {
                 if (unit.getPlayerID() == bwapi.getSelf().getID()) {
                     zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
                     zergID++;
@@ -85,43 +209,25 @@ public class ZergAI implements BWAPIEventListener, Runnable {
                 }
             }
 
-            if(typeID == UnitType.UnitTypes.Zerg_Queen.getID()){
+            if (typeID == UnitType.UnitTypes.Zerg_Scourge.getID()) {
                 if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                    zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
                     //zergID++;
-                }else {
+                } else {
                     enemyUnits.add(unit);
                 }
             }
-
-            if(typeID == UnitType.UnitTypes.Zerg_Hydralisk.getID()){
-                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
-                    //zergID++;
-                }else {
-                    enemyUnits.add(unit);
-                }
-            }
-
-            if(typeID == UnitType.UnitTypes.Zerg_Ultralisk.getID()){
-                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
-                    //zergID++;
-                }else {
-                    enemyUnits.add(unit);
-                }
-            }
-
-            if(typeID == UnitType.UnitTypes.Zerg_Scourge.getID()){
-                if (unit.getPlayerID() == bwapi.getSelf().getID()) {
-                    //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
-                    //zergID++;
-                }else {
-                    enemyUnits.add(unit);
-                }
-            }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if (typeID == UnitType.UnitTypes.Zerg_Hatchery.getID()) {
+            if (unit.getPlayerID() == bwapi.getSelf().getID()) {
+                //zergs.add(new Zerg(unit, bwapi, enemyUnits, zergID));
+                //zergID++;
+            } else {
+                enemyUnits.add(unit);
+            }
         }
     }
 
@@ -129,22 +235,46 @@ public class ZergAI implements BWAPIEventListener, Runnable {
     public void unitDestroy(int unitID) {
 
         Zerg rm = null;
-        for(Zerg zerg: zergs){
-            if(zerg.getID() == unitID){
+        for (Zerg zerg : zergs) {
+            if (zerg.getUnit().getID() == unitID) {
+                if (zerg.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || zerg.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                    try {
+                        PrintWriter writer = new PrintWriter("data/parameters" + zerg.getID() + ".txt", "UTF-8");
+
+                        writer.println(zerg.getWeight1()); // 0
+                        writer.println(zerg.getWeight2());  // 1
+                        writer.println(zerg.getWeight3());    // 2
+                        writer.println(zerg.getWeight4());        // 3
+                        writer.println(zerg.getFitness()); // 4
+                        writer.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 rm = zerg;
                 break;
             }
         }
+
         zergs.remove(rm);
 
         Unit rmUnit = null;
-        for(Unit u:enemyUnits){
-            if(u.getID()==unitID){
+        for (Unit u : enemyUnits) {
+            if (u.getID() == unitID) {
                 rmUnit = u;
                 break;
             }
         }
         enemyUnits.remove(rmUnit);
+        if (rmUnit != null) {
+            if (rmUnit.getX() == Zerg.hatcheryX1 && rmUnit.getY() == Zerg.hatcheryY1) {
+                System.out.println("DESTROYED!");
+                Zerg.destroyed = true;
+            } else if (rmUnit.getX() == Zerg.hatcheryX2 && rmUnit.getY() == Zerg.hatcheryY2) {
+                System.out.println("DESTROYED2!");
+                Zerg.destroyed2 = true;
+            }
+        }
     }
 
     @Override
@@ -154,9 +284,61 @@ public class ZergAI implements BWAPIEventListener, Runnable {
 
     @Override
     public void matchEnd(boolean winner) {
-        System.out.println(zergs.size());
-        System.out.println(enemyUnits.size());
-}
+
+        //deletes all parameter files from directory data -> no useless files
+        File file = new File("classifier");
+        String[] myFiles;
+        if (file.isDirectory()) {
+            myFiles = file.list();
+            for (int i = 0; i < myFiles.length; i++) {
+                File myFile = new File(file, myFiles[i]);
+                myFile.delete();
+            }
+        }
+
+        //at the end of every game it saves the classifier parameters and the number of classifiers into seperated files
+        ArrayList<Classifier> classifier = xcs.getClassifier();
+
+        //saves parameters for each classifier
+        for (int i = 0; i < classifier.size(); i++) {
+            try {
+                xcs.writeParameters(i);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //saves number of classifiers in file general.txt
+        try {
+            PrintWriter writer2 = new PrintWriter("classifier/general.txt", "UTF-8");
+            writer2.println(Classifier.NUM_CLASSIFIERS);
+            writer2.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+
+        for (Zerg zerg : zergs) {
+            if (zerg.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || zerg.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                try {
+                    PrintWriter writer = new PrintWriter("data/parameters" + zerg.getID() + ".txt", "UTF-8");
+
+                    writer.println(zerg.getWeight1()); // 0
+                    writer.println(zerg.getWeight2());        // 1
+                    writer.println(zerg.getWeight3());    // 2
+                    writer.println(zerg.getWeight4());        // 3
+                    writer.println(zerg.getFitness()); // 4
+                    writer.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     @Override
     public void keyPressed(int keyCode) {
@@ -287,7 +469,9 @@ public class ZergAI implements BWAPIEventListener, Runnable {
     public Zerg selectOffspring() {
         int fitnesssum = 0;
         for (Zerg x : zergs) {
-            fitnesssum += x.getFitness();
+            if(x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                fitnesssum += x.getFitness();
+            }
         }
 
         Random rn = new Random();
@@ -295,7 +479,9 @@ public class ZergAI implements BWAPIEventListener, Runnable {
         fitnesssum = 0;
 
         for (Zerg x : zergs) {
-            fitnesssum = fitnesssum + x.getFitness();
+            if(x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                fitnesssum = fitnesssum + x.getFitness();
+            }
             if (fitnesssum >= choicepoint) {
                 return x;
             }
@@ -314,9 +500,11 @@ public class ZergAI implements BWAPIEventListener, Runnable {
         int tmp = Integer.MAX_VALUE;
         //lowest (fitness) tuple of weights is chosen as child so that it will improve
         for (Zerg x : zergs) {
-            if (x.getFitness() < tmp) {
-                child = x;
-                tmp = x.getFitness();
+            if(x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || x.getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
+                if (x.getFitness() < tmp) {
+                    child = x;
+                    tmp = x.getFitness();
+                }
             }
         }
         //applyCrossover child gets weights from each parent with a specific proportion
@@ -327,14 +515,14 @@ public class ZergAI implements BWAPIEventListener, Runnable {
             child.setWeight2(parent1.getWeight2() * prob + parent2.getWeight2() * (1 - prob));
             child.setWeight3(parent1.getWeight3() * prob + parent2.getWeight3() * (1 - prob));
             child.setWeight4(parent1.getWeight4() * prob + parent2.getWeight4() * (1 - prob));
-        }else{
+        } else {
             return;
         }
 
         Random rn = new Random();
         //for each weight run mutation with a prob of 0.1
         for (int i = 1; i < 5; i++) {
-            int num1 = 100; //probability 0.1
+            int num1 = 1000; //probability 0.1
             double random = rn.nextDouble() * 1000;
             random = Math.round(random);
             int num2 = (int) random;
@@ -359,7 +547,19 @@ public class ZergAI implements BWAPIEventListener, Runnable {
         }
     }
 
-    public HashSet<Zerg> getMarines() {
+
+    public Unit getClosestEnemy() {
+        Unit result = null;
+        for (Unit enemy : enemyUnits) {
+            if (enemy.getTypeID() == UnitType.UnitTypes.Zerg_Hatchery.getID()) {
+                result = enemy;
+            }
+        }
+        return result;
+    }
+
+
+    public ArrayList<Zerg> getZergs() {
         return zergs;
     }
 
