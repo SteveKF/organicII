@@ -25,6 +25,9 @@ public class Zerg {
     public static int hatcheryX2;
     public static int hatcheryY1;
     public static int hatcheryY2;
+    public static int ownHatcheryX;
+    public static int ownHatcheryY;
+
 
     private ArrayList<Zerg> column1;
     private ArrayList<Zerg> column2;
@@ -64,7 +67,7 @@ public class Zerg {
         neighbourhood = new ArrayList<>();
         fitness = 0;
         //reads weights and fitness from last run game
-        if (learnt && (getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID() || getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID())) {
+        if (learnt==true && (getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID() || getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Hydralisk.getID())) {
             String[] parameterArray = new String[5];
             int i = 0;
             BufferedReader br = new BufferedReader(new FileReader("data/parameters"
@@ -152,11 +155,10 @@ public class Zerg {
             }
         } else {
             if (unit.getTypeID() == UnitType.UnitTypes.Zerg_Queen.getID() ||
-                    unit.getTypeID() == UnitType.UnitTypes.Zerg_Scourge.getID() ||
-                    unit.getTypeID() == UnitType.UnitTypes.Zerg_Hydralisk.getID()) {
+                    unit.getTypeID() == UnitType.UnitTypes.Zerg_Scourge.getID()) {
                 int i;
                 for(i=0;i<zergUnits.size();i++){
-                    if (zergUnits.get(i).getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Ultralisk.getID()) {
+                    if (zergUnits.get(i).getUnit().getTypeID() == UnitType.UnitTypes.Zerg_Zergling.getID()) {
                         break;
                     }
                 }
@@ -175,9 +177,9 @@ public class Zerg {
     private void move(Position targetPosition) {
         //TODO: Implement the flocking behavior in this method.
         setNeighbourhood();
-        /*double x = rule1().getX() * weight1 + +rule2().getX() * weight2 + rule3(true, false).getX() * weight3
+        /*double x = rule1(targetPosition).getX() * weight1 + +rule2().getX() * weight2 + rule3(true, false).getX() * weight3
                 + rule3(false, true).getX() * weight4;
-        double y = rule1().getY() * weight1 + rule2().getY() * weight2 + rule3(true, false).getY() * weight3
+        double y = rule1(targetPosition).getY() * weight1 + rule2().getY() * weight2 + rule3(true, false).getY() * weight3
                 + rule3(false, true).getY() * weight4;*/
 
         double x = rule1(targetPosition).getX() * weight1 + +rule2().getX() * weight2 + getCohesion(new Position(getX(), getY())).getX() * weight3;
